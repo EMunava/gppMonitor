@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gpp-config
+  labels:
+    name: gpp-config
+data:
+  SSH_USER: ""
+  SSH_ENDPOINT: ""
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: gpp-monitor
+  name: gpp-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpp-monitor
+  template:
+    metadata:
+      labels:
+        app: gpp-monitor
+    spec:
+      containers:
+      - image: zamedic/gce-monitor:1.1.1
+        name: gce-monitor
+        ports:
+        - containerPort: 8002
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: hal-config
+        - configMapRef:
+            name: gpp-config
+        - secretRef:
+            name: hal-secrets
+        - secretRef:
+            name: gpp-secrets
+        env:
+        - name: HAL_ENDPOINT
+          value: ""
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: gpp-monitor-service
+spec:
+  selector:
+    app: gpp-monitor
+  ports:
+  - protocol: TCP
+    name: http
+    port: 80
+    targetPort: 8002
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gpp-monitor-ingress
+  annotations:
+    kubernetes.io/ingress.class: istio
+spec:
+  rules:
+  - host: gpp-monitor.legion.sbsa.local
+    http:
+      paths:
+      - backend:
+          serviceName: gpp-monitor-service
+          servicePort: http
+
