@@ -25,8 +25,8 @@ spec:
         app: gpp-monitor
     spec:
       containers:
-      - image: zamedic/gce-monitor:1.1.1
-        name: gce-monitor
+      - image: zamedic/gpp-monitor:1.1.1
+        name: gpp-monitor
         ports:
         - containerPort: 8002
           protocol: TCP
@@ -64,7 +64,7 @@ metadata:
     kubernetes.io/ingress.class: istio
 spec:
   rules:
-  - host: gpp-monitor.legion.sbsa.local
+  - host: gpp-monitor.<<<>>>
     http:
       paths:
       - backend:
