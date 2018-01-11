@@ -35,8 +35,8 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	loginButton, err := wd.FindElement(selenium.ByCSSSelector, "#main-content > div > div > div.ft-form-container > div:nth-child(2) > div > form > button")
 
-	user.SendKeys("A229343")
-	pass.SendKeys("Gr33nfus")
+	user.SendKeys("")
+	pass.SendKeys("")
 	loginButton.Submit()
 
 	//Wait for successful login
