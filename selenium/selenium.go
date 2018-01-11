@@ -59,7 +59,7 @@ func doSelenium() {
 		return
 	}
 
-	//Date rollover monitoring method to go here
+	confirmDateRollOver(webDriver)
 
 }
 
