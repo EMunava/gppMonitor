@@ -63,6 +63,17 @@ func doSelenium() {
 
 }
 
+func waitForWaitFor(webDriver selenium.WebDriver) error {
+	return webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+		elem, err := wb.FindElement(selenium.ByCSSSelector, "body > div.dh-notification.ng-scope.success > div")
+		if err != nil {
+			return true, nil
+		}
+		r, err := elem.IsDisplayed()
+		return !r, nil
+	})
+}
+
 func handleSeleniumError(err error, driver selenium.WebDriver) {
 	debug.PrintStack()
 	if driver == nil {
