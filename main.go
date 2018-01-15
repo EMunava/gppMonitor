@@ -1,8 +1,8 @@
 package main
 
 import (
-	"log"
 	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/selenium"
+	"log"
 	"time"
 )
 
