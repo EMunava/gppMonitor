@@ -2,9 +2,9 @@ package selenium
 
 import (
 	"github.com/tebeka/selenium"
-	"time"
 	"log"
 	"strings"
+	"time"
 )
 
 func confirmDateRollOver(wd selenium.WebDriver) {
@@ -15,7 +15,23 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 		}
 	}()
 
-	//============================Login========+======================================
+	logIn(wd)
+
+	navigateToDates(wd)
+
+	Success := extractDates(wd)
+
+	if Success == 3 {
+		sendError("Dates successfully rolled over to next business day", nil, false)
+	} else {
+		img, _ := wd.Screenshot()
+		sendError("One or more dates have not rolled over to next business day", img, false)
+	}
+
+	logOut(wd)
+}
+
+func logIn(wd selenium.WebDriver) {
 	user, err := wd.FindElement(selenium.ByName, "txtUserId")
 	if err != nil {
 		panic(err)
@@ -42,8 +58,9 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	//Wait for successful login
 	waitFor(wd, "dh-customer-logo")
+}
 
-	//============================Confirm Dates=======================================
+func navigateToDates(wd selenium.WebDriver) {
 
 	waitForWaitFor(wd)
 
@@ -57,55 +74,9 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 	}
 
 	waitFor(wd, "ft-grid-click")
-
-	//Values to check
-	dates, err := wd.FindElements(selenium.ByClassName, "ui-grid-cell-contents")
-	if err != nil {
-		panic(err)
-	}
-
-	//Successful date rollover amount
-	Success := 0
-
-	for  _, date := range dates{
-
-		dValue, err := date.GetAttribute("innerText")
-		if err != nil {
-			panic(err)
-		}
-		sp := strings.Split(dValue, "/")
-
-		if len(sp) != 1 {
-			success := dateConfirm(dValue)
-			Success += success
-		}
-	}
-
-	if Success == 2 {
-		sendError("Dates successfully rolled over to next business day", nil, false )
-	} else {
-		img,_ := wd.Screenshot()
-		sendError("One or more dates have not rolled over to next business day", img,false)
-	}
-
-
-	//============================Logout==============================================
-	logOut(wd)
 }
 
-func dateConfirm(d1 string)(int) {
-
-	currentDate := time.Now()
-	cd := currentDate.Format("02/01/2006")
-	c := strings.Compare(d1, cd)
-	if c == 0{
-		return 1
-	} else {
-		return 0
-	}
-}
-
-func logOut(wd selenium.WebDriver){
+func logOut(wd selenium.WebDriver) {
 
 	signOutButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
 	if err != nil {
@@ -125,4 +96,41 @@ func waitFor(webDriver selenium.WebDriver, selector string) {
 		r, err := elem.IsDisplayed()
 		return r, nil
 	})
+}
+
+func extractDates(wd selenium.WebDriver) int {
+
+	Success := 0
+
+	dates, err := wd.FindElements(selenium.ByClassName, "ui-grid-cell-contents")
+	if err != nil {
+		panic(err)
+	}
+
+	for _, date := range dates {
+
+		dValue, err := date.GetAttribute("innerText")
+		if err != nil {
+			panic(err)
+		}
+		sp := strings.Split(dValue, "/")
+
+		if len(sp) != 1 {
+			success := dateConfirm(dValue)
+			Success += success
+		}
+	}
+	return Success
+}
+
+func dateConfirm(d1 string) int {
+
+	currentDate := time.Now()
+	cd := currentDate.Format("02/01/2006")
+	c := strings.Compare(d1, cd)
+	if c == 0 {
+		return 1
+	}
+	return 0
+
 }
