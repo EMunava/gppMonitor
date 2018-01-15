@@ -53,8 +53,8 @@ func logIn(wd selenium.WebDriver) {
 
 	loginButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign In')]")
 
-	user.SendKeys(GPPUser())
-	pass.SendKeys(GPPPass())
+	user.SendKeys(gppUser())
+	pass.SendKeys(gppPass())
 	loginButton.Submit()
 
 	//Wait for successful login
@@ -141,10 +141,10 @@ func dateConfirm(d1 string) int {
 
 }
 
-func GPPUser() string {
+func gppUser() string {
 	return os.Getenv("GPP_USER")
 }
 
-func GPPPass() string {
+func gppPass() string {
 	return os.Getenv("GPP_PASSWORD")
 }
