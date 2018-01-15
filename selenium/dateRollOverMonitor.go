@@ -3,6 +3,7 @@ package selenium
 import (
 	"github.com/tebeka/selenium"
 	"log"
+	"os"
 	"strings"
 	"time"
 )
@@ -52,8 +53,8 @@ func logIn(wd selenium.WebDriver) {
 
 	loginButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign In')]")
 
-	user.SendKeys("")
-	pass.SendKeys("")
+	user.SendKeys(GPPUser())
+	pass.SendKeys(GPPPass())
 	loginButton.Submit()
 
 	//Wait for successful login
@@ -138,4 +139,12 @@ func dateConfirm(d1 string) int {
 	}
 	return 0
 
+}
+
+func GPPUser() string {
+	return os.Getenv("GPP_USER")
+}
+
+func GPPPass() string {
+	return os.Getenv("GPP_PASSWORD")
 }
