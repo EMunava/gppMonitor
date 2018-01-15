@@ -21,7 +21,7 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	Success := extractDates(wd)
 
-	if Success == 3 {
+	if Success == 2 {
 		sendError("Dates successfully rolled over to next business day", nil, false)
 	} else {
 		img, _ := wd.Screenshot()
@@ -52,8 +52,8 @@ func logIn(wd selenium.WebDriver) {
 
 	loginButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign In')]")
 
-	user.SendKeys("A229343")
-	pass.SendKeys("Gr33nfus")
+	user.SendKeys("")
+	pass.SendKeys("")
 	loginButton.Submit()
 
 	//Wait for successful login
@@ -109,18 +109,23 @@ func extractDates(wd selenium.WebDriver) int {
 
 	for _, date := range dates {
 
-		dValue, err := date.GetAttribute("innerText")
-		if err != nil {
-			panic(err)
-		}
-		sp := strings.Split(dValue, "/")
-
-		if len(sp) != 1 {
-			success := dateConfirm(dValue)
-			Success += success
-		}
+		Success += extractionLoop(date)
 	}
 	return Success
+}
+
+func extractionLoop(date selenium.WebElement) int {
+	dValue, err := date.GetAttribute("innerText")
+	if err != nil {
+		sendError(err.Error(), nil, true)
+	}
+	sp := strings.Split(dValue, "/")
+
+	if len(sp) != 1 {
+		success := dateConfirm(dValue)
+		return success
+	}
+	return 0
 }
 
 func dateConfirm(d1 string) int {

@@ -1,39 +1,39 @@
 package selenium
 
 import (
-	"github.com/tebeka/selenium"
-	"encoding/base64"
-	"net/http"
-	"encoding/json"
 	"bytes"
-	"log"
-	"io/ioutil"
-	"runtime/debug"
-	"os"
-	"github.com/jasonlvhit/gocron"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
+	"github.com/jasonlvhit/gocron"
+	"github.com/tebeka/selenium"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"runtime/debug"
 )
 
 type alertMessage struct {
 	Message, Image string
-	internalError bool
+	internalError  bool
 }
 
-func init(){
+func init() {
 	go func() {
 		schedule()
 	}()
 
 }
 
-func schedule(){
+func schedule() {
 	gocron.Every(1).Day().At("11:30").Do(doSelenium)
 	gocron.Every(1).Day().At("00:30").Do(doSelenium)
 	gocron.Every(1).Day().At("01:30").Do(doSelenium)
 	_, schedule := gocron.NextRun()
 	fmt.Println(schedule)
 
-	<- gocron.Start()
+	<-gocron.Start()
 }
 
 func doSelenium() {
@@ -90,7 +90,7 @@ func handleSeleniumError(err error, driver selenium.WebDriver) {
 }
 
 func sendError(message string, image []byte, internalError bool) {
-	a := alertMessage{Message: message, internalError:internalError}
+	a := alertMessage{Message: message, internalError: internalError}
 	if image != nil {
 		a.Image = base64.StdEncoding.EncodeToString(image)
 	}
@@ -122,5 +122,3 @@ func seleniumServer() string {
 func errorEndpoint() string {
 	return os.Getenv("HAL_ENDPOINT")
 }
-
-
