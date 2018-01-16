@@ -132,13 +132,23 @@ func extractionLoop(date selenium.WebElement) int {
 func dateConfirm(d1 string) int {
 
 	currentDate := time.Now()
+	tomorrowDate := currentDate.AddDate(0, 0, 1)
+
 	cd := currentDate.Format("02/01/2006")
+	td := tomorrowDate.Format("02/01/2006")
+
+	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 24, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 23, 0, 0, 0, currentDate.Location())) {
+		t := strings.Compare(d1, td)
+		if t == 0 {
+			return 1
+		}
+		return 0
+	}
 	c := strings.Compare(d1, cd)
 	if c == 0 {
 		return 1
 	}
 	return 0
-
 }
 
 func gppUser() string {
