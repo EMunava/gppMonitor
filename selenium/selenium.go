@@ -27,16 +27,20 @@ func init() {
 }
 
 func schedule() {
-	gocron.Every(1).Day().At("11:30").Do(doSelenium)
-	gocron.Every(1).Day().At("00:30").Do(doSelenium)
-	gocron.Every(1).Day().At("01:30").Do(doSelenium)
+	gocron.Every(1).Day().At("11:30").Do(seleniumDateRolloverCheck)
+	gocron.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
+	gocron.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
 	_, schedule := gocron.NextRun()
 	fmt.Println(schedule)
 
 	<-gocron.Start()
 }
 
-func doSelenium() {
+func CallSeleniumDateCheck() {
+	seleniumDateRolloverCheck()
+}
+
+func seleniumDateRolloverCheck() {
 	var webDriver selenium.WebDriver
 	var err error
 	caps := selenium.Capabilities(map[string]interface{}{"browserName": "chrome"})
