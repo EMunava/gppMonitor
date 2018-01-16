@@ -28,7 +28,7 @@ func init() {
 
 func getRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/dateRollover", runSelenium).Methods("POST")
+	r.HandleFunc("/dateRollover", runSelenium)
 
 	router.Mux = r
 	return r
