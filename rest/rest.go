@@ -7,14 +7,14 @@ import (
 	"net/http"
 )
 
-type RouterObject struct {
+type routerObject struct {
 	Mux *mux.Router
 }
 
-var router *RouterObject
+var router *routerObject
 
 func init() {
-	router = &RouterObject{}
+	router = &routerObject{}
 	go func() {
 		log.Println("Starting HTTP Server...")
 		log.Fatal(http.ListenAndServe(":8080", getRouter()))
@@ -32,11 +32,4 @@ func getRouter() *mux.Router {
 
 	router.Mux = r
 	return r
-}
-
-/*
-Router starts the router service
-*/
-func Router() *RouterObject {
-	return router
 }
