@@ -1,12 +1,12 @@
 package selenium
 
 import (
+	"fmt"
 	"github.com/tebeka/selenium"
 	"log"
 	"os"
 	"strings"
 	"time"
-	"fmt"
 )
 
 func confirmDateRollOver(wd selenium.WebDriver) {
