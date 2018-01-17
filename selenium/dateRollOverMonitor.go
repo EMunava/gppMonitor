@@ -93,6 +93,8 @@ func logOut(wd selenium.WebDriver) {
 		return
 	}
 	err = signOutButton.Click()
+
+	waitFor(wd, "dh-input-field")
 }
 
 func waitFor(webDriver selenium.WebDriver, selector string) {
