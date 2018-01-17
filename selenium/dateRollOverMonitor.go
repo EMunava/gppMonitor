@@ -87,6 +87,8 @@ func logOut(wd selenium.WebDriver) {
 
 	signOutButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
 	if err != nil {
+		img, _ := wd.Screenshot()
+		sendError(fmt.Sprint(err), img, true)
 		log.Println(err.Error())
 		return
 	}
