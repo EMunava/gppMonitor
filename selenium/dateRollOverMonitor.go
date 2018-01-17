@@ -1,6 +1,7 @@
 package selenium
 
 import (
+	"fmt"
 	"github.com/tebeka/selenium"
 	"log"
 	"os"
@@ -12,6 +13,8 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			img, _ := wd.Screenshot()
+			sendError(fmt.Sprint(err), img, true)
 			logOut(wd)
 		}
 	}()
@@ -33,6 +36,9 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 }
 
 func logIn(wd selenium.WebDriver) {
+
+	waitFor(wd, "dh-input-field")
+
 	user, err := wd.FindElement(selenium.ByName, "txtUserId")
 	if err != nil {
 		panic(err)
@@ -82,6 +88,7 @@ func logOut(wd selenium.WebDriver) {
 	signOutButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
 	if err != nil {
 		log.Println(err.Error())
+		return
 	}
 	err = signOutButton.Click()
 }
