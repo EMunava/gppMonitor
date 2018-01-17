@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"fmt"
 )
 
 func confirmDateRollOver(wd selenium.WebDriver) {
@@ -13,7 +14,7 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 	defer func() {
 		if err := recover(); err != nil {
 			img, _ := wd.Screenshot()
-			sendError("An error was experienced", img, true)
+			sendError(fmt.Sprint(err), img, true)
 			logOut(wd)
 		}
 	}()
