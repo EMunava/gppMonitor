@@ -46,16 +46,8 @@ func logIn(wd selenium.WebDriver) {
 		panic(err)
 	}
 
-	if err := user.Clear(); err != nil {
-		panic(err)
-	}
-
 	pass, err := wd.FindElement(selenium.ByName, "txtPassword")
 	if err != nil {
-		panic(err)
-	}
-
-	if err := pass.Clear(); err != nil {
 		panic(err)
 	}
 
@@ -103,6 +95,7 @@ func logOut(wd selenium.WebDriver) {
 		img, _ := wd.Screenshot()
 		sendError(fmt.Sprint(err), img, true)
 		log.Println(err.Error())
+		return
 	}
 
 	if err := waitFor(wd, "dh-input-field"); err != nil {
