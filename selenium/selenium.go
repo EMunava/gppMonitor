@@ -26,17 +26,22 @@ func init() {
 
 }
 
+//CallSeleniumDateCheck confirms the GPP transaction date rollover buy comparing the current/tommorow's date and the date logged.
+func CallSeleniumDateCheck() {
+	seleniumDateRolloverCheck()
+}
+
 func schedule() {
-	gocron.Every(1).Day().At("11:30").Do(doSelenium)
-	gocron.Every(1).Day().At("00:30").Do(doSelenium)
-	gocron.Every(1).Day().At("01:30").Do(doSelenium)
+	gocron.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
+	gocron.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
+	gocron.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
 	_, schedule := gocron.NextRun()
 	fmt.Println(schedule)
 
 	<-gocron.Start()
 }
 
-func doSelenium() {
+func seleniumDateRolloverCheck() {
 	var webDriver selenium.WebDriver
 	var err error
 	caps := selenium.Capabilities(map[string]interface{}{"browserName": "chrome"})
