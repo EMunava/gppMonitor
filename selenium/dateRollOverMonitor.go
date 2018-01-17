@@ -37,7 +37,9 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 func logIn(wd selenium.WebDriver) {
 
-	waitFor(wd, "dh-input-field")
+	if err := waitFor(wd, "dh-input-field"); err != nil {
+		panic(err)
+	}
 
 	user, err := wd.FindElement(selenium.ByName, "txtUserId")
 	if err != nil {
@@ -64,7 +66,9 @@ func logIn(wd selenium.WebDriver) {
 	loginButton.Submit()
 
 	//Wait for successful login
-	waitFor(wd, "dh-customer-logo")
+	if err := waitFor(wd, "dh-customer-logo"); err != nil {
+		panic(err)
+	}
 }
 
 func navigateToDates(wd selenium.WebDriver) {
@@ -80,7 +84,9 @@ func navigateToDates(wd selenium.WebDriver) {
 		panic(err)
 	}
 
-	waitFor(wd, "ft-grid-click")
+	if err := waitFor(wd, "ft-grid-click"); err != nil {
+		panic(err)
+	}
 }
 
 func logOut(wd selenium.WebDriver) {
@@ -93,21 +99,29 @@ func logOut(wd selenium.WebDriver) {
 		return
 	}
 	err = signOutButton.Click()
+	if err != nil {
+		img, _ := wd.Screenshot()
+		sendError(fmt.Sprint(err), img, true)
+		log.Println(err.Error())
+	}
 
-	waitFor(wd, "dh-input-field")
+	if err := waitFor(wd, "dh-input-field"); err != nil {
+		panic(err)
+	}
 }
 
-func waitFor(webDriver selenium.WebDriver, selector string) {
+func waitFor(webDriver selenium.WebDriver, selector string) error {
 
-	webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
 
 		elem, err := wb.FindElement(selenium.ByClassName, selector)
 		if err != nil {
-			return false, nil
+			return false, err
 		}
 		r, err := elem.IsDisplayed()
 		return r, nil
 	})
+	return e
 }
 
 func extractDates(wd selenium.WebDriver) int {
