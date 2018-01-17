@@ -109,7 +109,7 @@ func waitFor(webDriver selenium.WebDriver, selector string) error {
 
 		elem, err := wb.FindElement(selenium.ByClassName, selector)
 		if err != nil {
-			return false, err
+			return false, nil
 		}
 		r, err := elem.IsDisplayed()
 		return r, nil
