@@ -65,6 +65,7 @@ func seleniumDateRolloverCheck() {
 	}
 
 	confirmDateRollOver(webDriver)
+	confirmWaitSchedSubBatch(webDriver)
 
 }
 
