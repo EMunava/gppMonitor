@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func RetreiveEDOLog() {
+func ListFiles() {
 
 	fileList, err := GetFilesInPath("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest")
 	if err != nil {

@@ -5,9 +5,9 @@ import (
 	"net/http"
 )
 
-func retreiveEDOLog(w http.ResponseWriter, r *http.Request) {
+func listFiles(w http.ResponseWriter, r *http.Request) {
 
-	sftp.RetreiveEDOLog()
+	sftp.ListFiles()
 	w.WriteHeader(http.StatusOK)
 }
 

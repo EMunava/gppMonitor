@@ -7,8 +7,9 @@ import (
 	"time"
 	"log"
 	"strings"
-	"encoding/pem"
 	"crypto/x509"
+	"encoding/pem"
+	"io/ioutil"
 )
 
 type File struct {
@@ -20,17 +21,17 @@ type File struct {
 
 func connect() (*sftp.Client, error) {
 
-	//	der := decrypt([]byte(privateKey()), []byte(privatePass()))
-	//	key, err := x509.ParsePKCS1PrivateKey(der)
-	//	signer, err = ssh.NewSignerFromKey(key)
-	//	if err != nil{
-	//		log.Print(err)
-	//	}
-
-	signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
+	der := decrypt([]byte(privateKey()), []byte(privatePass()))
+	key, err := x509.ParsePKCS1PrivateKey(der)
+	signer, err := ssh.NewSignerFromKey(key)
 	if err != nil{
 		log.Print(err)
 	}
+
+	//signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
+	//if err != nil{
+	//	log.Print(err)
+	//}
 
 	clientConfig := &ssh.ClientConfig{
 		User: sshUser(),
@@ -80,8 +81,52 @@ func GetFilesInPath(path string) ([]File, error) {
 		result[x] = File{Name: file.Name(), LastModified: file.ModTime(), Path: path, Size: file.Size()}
 	}
 	return result, nil
-
 }
+
+func PublicKeyFile(file string) ssh.AuthMethod {
+	buffer, err := ioutil.ReadFile(file)
+	if err != nil {
+		return nil
+	}
+
+	key, err := ssh.ParsePrivateKey(buffer)
+	if err != nil {
+		return nil
+	}
+	return ssh.PublicKeys(key)
+}
+
+func retrieveFile(path, file string){
+
+	client, err := connect()
+	if err != nil {
+		log.Println(err)
+	}
+	defer client.Close()
+
+	srcPath := path
+	localPath := "/tmp/"
+	filename := file
+
+	srcFile, err := client.Open(srcPath + filename)
+	if err != nil {
+		log.Println(err)
+	}
+	defer srcFile.Close()
+
+	// Create the destination file
+	dstFile, err := os.Create(localPath + filename)
+	if err != nil {
+		log.Println(err)
+	}
+	defer dstFile.Close()
+	// Copy the file
+	srcFile.WriteTo(dstFile)
+}
+
+
+
+
 
 func sshUser() string {
 	return os.Getenv("SSH_USER")
