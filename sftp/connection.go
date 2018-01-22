@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
+	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"io/ioutil"
@@ -13,6 +15,22 @@ import (
 	"strings"
 	"time"
 )
+
+func init() {
+	go func() {
+		schedule()
+	}()
+
+}
+
+func schedule() {
+	gocron.Every(1).Day().At("01:10").Do(RetrieveEDOLog)
+
+	_, schedule := gocron.NextRun()
+	fmt.Println(schedule)
+
+	<-gocron.Start()
+}
 
 type alertMessage struct {
 	Message, Image string
