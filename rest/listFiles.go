@@ -10,4 +10,3 @@ func listFiles(w http.ResponseWriter, r *http.Request) {
 	sftp.ListFiles()
 	w.WriteHeader(http.StatusOK)
 }
-

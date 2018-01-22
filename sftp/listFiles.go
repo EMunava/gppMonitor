@@ -1,8 +1,8 @@
 package sftp
 
 import (
-	"log"
 	"fmt"
+	"log"
 )
 
 func ListFiles() {

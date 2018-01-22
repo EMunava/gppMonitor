@@ -1,16 +1,23 @@
 package sftp
 
 import (
-	"os"
-	"golang.org/x/crypto/ssh"
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"github.com/pkg/sftp"
-	"time"
-	"log"
-	"strings"
-	"crypto/x509"
-	"encoding/pem"
+	"golang.org/x/crypto/ssh"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"time"
 )
+
+type alertMessage struct {
+	Message, Image string
+	internalError  bool
+}
 
 type File struct {
 	Name         string
@@ -21,18 +28,10 @@ type File struct {
 
 func connect() (*sftp.Client, error) {
 
-	der := decrypt([]byte(privateKey()), []byte(privatePass()))
-	key, err := x509.ParsePKCS1PrivateKey(der)
-	signer, err := ssh.NewSignerFromKey(key)
-	if err != nil{
+	signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
+	if err != nil {
 		log.Print(err)
 	}
-
-	//signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
-	//if err != nil{
-	//	log.Print(err)
-	//}
-
 	clientConfig := &ssh.ClientConfig{
 		User: sshUser(),
 		Auth: []ssh.AuthMethod{
@@ -48,21 +47,9 @@ func connect() (*sftp.Client, error) {
 	return client, err
 }
 
-func decrypt(key []byte, password []byte) []byte {
-	block, rest := pem.Decode(key)
-	if len(rest) > 0 {
-		log.Fatalf("Extra data included in key")
-	}
-	der, err := x509.DecryptPEMBlock(block, password)
-	if err != nil {
-		log.Fatalf("Decrypt failed: %v", err)
-	}
-	return der
-}
-
 /*
 GetFilesInPath will return all the files within a path
- */
+*/
 func GetFilesInPath(path string) ([]File, error) {
 	client, err := connect()
 	if err != nil {
@@ -83,20 +70,7 @@ func GetFilesInPath(path string) ([]File, error) {
 	return result, nil
 }
 
-func PublicKeyFile(file string) ssh.AuthMethod {
-	buffer, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil
-	}
-
-	key, err := ssh.ParsePrivateKey(buffer)
-	if err != nil {
-		return nil
-	}
-	return ssh.PublicKeys(key)
-}
-
-func retrieveFile(path, file string){
+func retrieveFile(path, file string) {
 
 	client, err := connect()
 	if err != nil {
@@ -113,30 +87,48 @@ func retrieveFile(path, file string){
 		log.Println(err)
 	}
 	defer srcFile.Close()
-
-	// Create the destination file
 	dstFile, err := os.Create(localPath + filename)
 	if err != nil {
 		log.Println(err)
 	}
 	defer dstFile.Close()
-	// Copy the file
 	srcFile.WriteTo(dstFile)
 }
 
+func sendError(message string, image []byte, internalError bool) {
+	a := alertMessage{Message: message, internalError: internalError}
+	if image != nil {
+		a.Image = base64.StdEncoding.EncodeToString(image)
+	}
 
+	request, _ := json.Marshal(a)
 
+	response, err := http.Post(errorEndpoint(), "application/json", bytes.NewReader(request))
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		log.Println(ioutil.ReadAll(response.Body))
+	}
+
+}
 
 func sshUser() string {
 	return os.Getenv("SSH_USER")
 }
+
 func privateKey() string {
 	return strings.Replace(os.Getenv("SSH_KEY"), "*", "\n", -1)
 }
-func privatePass() string {
-	return os.Getenv("DEC_PASS")
-}
+
 func sshEndpoint() string {
 	return os.Getenv("SSH_ENDPOINT")
+}
+
+func errorEndpoint() string {
+	return os.Getenv("HAL_ENDPOINT")
 }

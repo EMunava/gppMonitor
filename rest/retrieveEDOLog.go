@@ -10,4 +10,3 @@ func retrieveEDOLog(w http.ResponseWriter, r *http.Request) {
 	sftp.RetrieveEDOLog()
 	w.WriteHeader(http.StatusOK)
 }
-
