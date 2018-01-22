@@ -57,10 +57,6 @@ func seleniumDateRolloverCheck() {
 	err = webDriver.Get(endpoint())
 	if err != nil {
 		handleSeleniumError(err, webDriver)
-	}
-
-	if err != nil {
-		handleSeleniumError(err, webDriver)
 		return
 	}
 
