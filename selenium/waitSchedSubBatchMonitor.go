@@ -4,6 +4,7 @@ import (
 	"github.com/tebeka/selenium"
 	"strings"
 	"time"
+	"fmt"
 )
 
 func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
@@ -16,17 +17,59 @@ func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
 
 	logIn(wd)
 
-	navigateToSubBatchDates()
+	navigateToSubBatchDates(wd)
 
 	subBatchAmount := extractSubBatchDates(wd)
 
-
+	sendError(fmt.Sprint("Scheduled transactions: %d", subBatchAmount), nil, false)
 
 	logOut(wd)
 }
 
-func navigateToSubBatchDates() {
+func navigateToSubBatchDates(wd selenium.WebDriver) {
 
+	grid, err := wd.FindElement(selenium.ByCSSSelector, "dh-navigation-tabs-current-tab-button")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = grid.Click(); err != nil {
+		panic(err)
+	}
+
+	sq, err := wd.FindElement(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = sq.Click(); err != nil {
+		panic(err)
+	}
+
+	im, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages')]")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = im.Click(); err != nil {
+		panic(err)
+	}
+
+	waiting, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Waiting')]")
+	if err != nil {
+		panic(err)
+	}
+
+	if err = waiting.Click(); err != nil {
+		panic(err)
+	}
+
+	waitSchedSubBatch, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Wait Sched Sub Batch')]")
+	if err != nil {
+		panic(err)
+	}
+
+	waitSchedSubBatch.Click()
 
 }
 
