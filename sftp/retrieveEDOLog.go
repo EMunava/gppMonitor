@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+/*
+RetrieveEDOLog copies contents of EDO.log to a local file of the same name which is then analysed for the success/failure of Edo Posing request file send
+*/
 func RetrieveEDOLog() {
 
 	retrieveFile("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest/", "EDO.log")
@@ -23,11 +26,11 @@ func RetrieveEDOLog() {
 	}
 
 	if strings.Contains(ll, "successful") {
-		sendError("EDO Posing request file successfully sent", nil, false)
-		log.Println("EDO Posing request file successfully sent")
+		sendError("EDO Posting request file successfully sent", nil, false)
+		log.Println("EDO Posting request file successfully sent")
 	} else {
-		sendError("EDO Posing request file send failed!!", nil, false)
-		log.Println("EDO Posing request file send failed!!")
+		sendError("EDO Posting request file send failed!!", nil, false)
+		log.Println("EDO Posting request file send failed!!")
 	}
 
 	os.Remove("/tmp/EDO.log")
@@ -65,12 +68,12 @@ func lineCounter() (int, error) {
 
 		switch {
 		case err == io.EOF:
-			count -= 1
+			count--
 			r.Close()
 			return count, nil
 
 		case err != nil:
-			count -= 1
+			count--
 			r.Close()
 			return count, err
 		}
