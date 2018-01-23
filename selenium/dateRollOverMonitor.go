@@ -104,7 +104,8 @@ func logOut(wd selenium.WebDriver) {
 	}
 
 	if err := waitFor(wd, "dh-input-field"); err != nil {
-		panic(err)
+		log.Println(err.Error())
+		return
 	}
 }
 
