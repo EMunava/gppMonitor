@@ -2,7 +2,6 @@ package sftp
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"github.com/jasonlvhit/gocron"
@@ -32,9 +31,8 @@ func schedule() {
 	<-gocron.Start()
 }
 
-type alertMessage struct {
-	Message, Image string
-	internalError  bool
+type alert struct {
+	Message string
 }
 
 type File struct {
@@ -113,15 +111,12 @@ func retrieveFile(path, file string) {
 	srcFile.WriteTo(dstFile)
 }
 
-func sendError(message string, image []byte, internalError bool) {
-	a := alertMessage{Message: message, internalError: internalError}
-	if image != nil {
-		a.Image = base64.StdEncoding.EncodeToString(image)
-	}
+func sendAlert(message string) {
+	a := alert{Message: message}
 
 	request, _ := json.Marshal(a)
 
-	response, err := http.Post(errorEndpoint(), "application/json", bytes.NewReader(request))
+	response, err := http.Post(alertEndpoint(), "application/json", bytes.NewReader(request))
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -147,6 +142,6 @@ func sshEndpoint() string {
 	return os.Getenv("SSH_ENDPOINT")
 }
 
-func errorEndpoint() string {
-	return os.Getenv("HAL_ENDPOINT")
+func alertEndpoint() string {
+	return os.Getenv("HAL_ENDPOINT_ALERT")
 }

@@ -26,11 +26,13 @@ func RetrieveEDOLog() {
 	}
 
 	if strings.Contains(ll, "successful") {
-		sendError("EDO Posting request file successfully sent", nil, false)
+		sendAlert("EDO Posting request file successfully sent")
 		log.Println("EDO Posting request file successfully sent")
-	} else {
-		sendError("EDO Posting request file send failed!!", nil, false)
+	} else if strings.Contains(ll, "failed") {
+		sendAlert("EDO Posting request file send failed")
 		log.Println("EDO Posting request file send failed!!")
+	} else {
+		log.Println("The last line did not contain success/failiure information")
 	}
 
 	os.Remove("/tmp/EDO.log")
@@ -45,7 +47,7 @@ func lastLine(lineNum int) (line string, lastLine int, err error) {
 	for sc.Scan() {
 		lastLine++
 		if lastLine == lineNum {
-			//r.Close()
+			r.Close()
 			return sc.Text(), lastLine, sc.Err()
 		}
 	}
@@ -68,12 +70,10 @@ func lineCounter() (int, error) {
 
 		switch {
 		case err == io.EOF:
-			count--
 			r.Close()
 			return count, nil
 
 		case err != nil:
-			count--
 			r.Close()
 			return count, err
 		}
