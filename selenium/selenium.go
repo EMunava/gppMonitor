@@ -16,7 +16,7 @@ import (
 
 type alertMessage struct {
 	Message, Image string
-	internalError  bool
+	InternalError  bool
 }
 
 func init() {
@@ -91,7 +91,7 @@ func handleSeleniumError(err error, driver selenium.WebDriver) {
 }
 
 func sendError(message string, image []byte, internalError bool) {
-	a := alertMessage{Message: message, internalError: internalError}
+	a := alertMessage{Message: message, InternalError: internalError}
 	if image != nil {
 		a.Image = base64.StdEncoding.EncodeToString(image)
 	}
