@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/tebeka/selenium"
 	"io/ioutil"
@@ -32,13 +31,14 @@ func CallSeleniumDateCheck() {
 }
 
 func schedule() {
-	gocron.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
-	gocron.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
-	gocron.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
+	sel := gocron.NewScheduler()
+	sel.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
 	_, schedule := gocron.NextRun()
-	fmt.Println(schedule)
+	log.Println(schedule)
 
-	<-gocron.Start()
+	<-sel.Start()
 }
 
 func seleniumDateRolloverCheck() {
