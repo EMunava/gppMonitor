@@ -5,8 +5,12 @@ metadata:
   labels:
     name: gpp-config
 data:
-  SSH_USER: ""
-  SSH_ENDPOINT: ""
+  SSH_USER:
+  SSH_ENDPOINT:
+  GPP_USER:
+  GPP_ENDPOINT:
+  SELENIUM_SERVER: http://selenium.card-devops/wd/hub
+  HAL_ENDPOINT: http://hal/alert/image
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -25,28 +29,28 @@ spec:
         app: gpp-monitor
     spec:
       containers:
-      - image: zamedic/gpp-monitor:1.1.1
+      - image: zamedic/gpp-monitor:1.45.1
         name: gpp-monitor
         ports:
-        - containerPort: 8002
+        - containerPort: 8080
           protocol: TCP
         envFrom:
         - configMapRef:
-            name: hal-config
-        - configMapRef:
             name: gpp-config
         - secretRef:
-            name: hal-secrets
-        - secretRef:
             name: gpp-secrets
-        env:
-        - name: HAL_ENDPOINT
-          value: ""
+        volumeMounts:
+        - name: tz-config
+          mountPath: /etc/localtime
+      volumes:
+      - name: tz-config
+        hostPath:
+          path: /usr/share/zoneinfo/Africa/Johannesburg
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: gpp-monitor-service
+  name: gpp-monitor
 spec:
   selector:
     app: gpp-monitor
@@ -54,20 +58,20 @@ spec:
   - protocol: TCP
     name: http
     port: 80
-    targetPort: 8002
+    targetPort: 8080
 ---
-apiVersion: extensions/v1beta1
 kind: Ingress
+apiVersion: extensions/v1beta1
 metadata:
-  name: gpp-monitor-ingress
+  name: gpp-monitor
   annotations:
-    kubernetes.io/ingress.class: istio
+   kubernetes.io/ingress.class: istio
 spec:
-  rules:
-  - host: gpp-monitor.<<<>>>
-    http:
-      paths:
-      - backend:
-          serviceName: gpp-monitor-service
-          servicePort: http
+   rules:
+     - host: <<Enter Host>>
+       http:
+         paths:
+           - backend:
+               serviceName: gpp-monitor
+               servicePort: http
 

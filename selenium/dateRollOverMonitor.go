@@ -1,6 +1,7 @@
 package selenium
 
 import (
+	"fmt"
 	"github.com/tebeka/selenium"
 	"log"
 	"os"
@@ -12,6 +13,8 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			img, _ := wd.Screenshot()
+			sendError(fmt.Sprint(err), img, true)
 			logOut(wd)
 		}
 	}()
@@ -22,32 +25,34 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	Success := extractDates(wd)
 
-	if Success == 2 {
-		sendError("Dates successfully rolled over to next business day", nil, false)
-	} else {
-		img, _ := wd.Screenshot()
-		sendError("One or more dates have not rolled over to next business day", img, false)
-	}
+	switch Success {
 
+	case 2:
+		sendError("Global and ZA date rollovers have completed successfully", nil, false)
+	case 1:
+		sendError("Global date rollover has completed successfully", nil, false)
+	case 0:
+		img, _ := wd.Screenshot()
+		sendError("Global and ZA dates have failed to rollover to the next business day", img, false)
+	}
+	img, _ := wd.Screenshot()
+	sendError("Just before logout", img, false)
 	logOut(wd)
 }
 
 func logIn(wd selenium.WebDriver) {
+
+	if err := waitFor(wd, "dh-input-field"); err != nil {
+		panic(err)
+	}
+
 	user, err := wd.FindElement(selenium.ByName, "txtUserId")
 	if err != nil {
 		panic(err)
 	}
 
-	if err := user.Clear(); err != nil {
-		panic(err)
-	}
-
 	pass, err := wd.FindElement(selenium.ByName, "txtPassword")
 	if err != nil {
-		panic(err)
-	}
-
-	if err := pass.Clear(); err != nil {
 		panic(err)
 	}
 
@@ -58,7 +63,9 @@ func logIn(wd selenium.WebDriver) {
 	loginButton.Submit()
 
 	//Wait for successful login
-	waitFor(wd, "dh-customer-logo")
+	if err := waitFor(wd, "dh-customer-logo"); err != nil {
+		panic(err)
+	}
 }
 
 func navigateToDates(wd selenium.WebDriver) {
@@ -74,21 +81,37 @@ func navigateToDates(wd selenium.WebDriver) {
 		panic(err)
 	}
 
-	waitFor(wd, "ft-grid-click")
+	if err := waitFor(wd, "ft-grid-click"); err != nil {
+		panic(err)
+	}
 }
 
 func logOut(wd selenium.WebDriver) {
 
 	signOutButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
 	if err != nil {
+		img, _ := wd.Screenshot()
+		sendError(fmt.Sprint(err), img, true)
 		log.Println(err.Error())
+		return
 	}
 	err = signOutButton.Click()
+	if err != nil {
+		img, _ := wd.Screenshot()
+		sendError(fmt.Sprint(err), img, true)
+		log.Println(err.Error())
+		return
+	}
+
+	if err := waitFor(wd, "dh-input-field"); err != nil {
+		log.Println(err.Error())
+		return
+	}
 }
 
-func waitFor(webDriver selenium.WebDriver, selector string) {
+func waitFor(webDriver selenium.WebDriver, selector string) error {
 
-	webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
 
 		elem, err := wb.FindElement(selenium.ByClassName, selector)
 		if err != nil {
@@ -97,6 +120,7 @@ func waitFor(webDriver selenium.WebDriver, selector string) {
 		r, err := elem.IsDisplayed()
 		return r, nil
 	})
+	return e
 }
 
 func extractDates(wd selenium.WebDriver) int {
