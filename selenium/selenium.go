@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/tebeka/selenium"
 	"io/ioutil"
