@@ -25,13 +25,18 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 	Success := extractDates(wd)
 
-	if Success == 2 {
-		sendError("Dates successfully rolled over to next business day", nil, false)
-	} else {
-		img, _ := wd.Screenshot()
-		sendError("One or more dates have not rolled over to next business day", img, false)
-	}
+	switch Success {
 
+	case 2:
+		sendError("Global and ZA date rollovers have completed successfully", nil, false)
+	case 1:
+		sendError("Global date rollover has completed successfully", nil, false)
+	case 0:
+		img, _ := wd.Screenshot()
+		sendError("Global and ZA dates have failed to rollover to the next business day", img, false)
+	}
+	img, _ := wd.Screenshot()
+	sendError("Just before logout", img, false)
 	logOut(wd)
 }
 
@@ -99,7 +104,8 @@ func logOut(wd selenium.WebDriver) {
 	}
 
 	if err := waitFor(wd, "dh-input-field"); err != nil {
-		panic(err)
+		log.Println(err.Error())
+		return
 	}
 }
 
