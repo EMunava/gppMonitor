@@ -3,7 +3,6 @@ package sftp
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -23,12 +22,12 @@ func init() {
 }
 
 func schedule() {
-	gocron.Every(1).Day().At("01:10").Do(RetrieveEDOLog)
-
+	conn := gocron.NewScheduler()
+	conn.Every(1).Day().At("01:10").Do(RetrieveEDOLog)
 	_, schedule := gocron.NextRun()
-	fmt.Println(schedule)
+	log.Println(schedule)
 
-	<-gocron.Start()
+	<-conn.Start()
 }
 
 type alert struct {
