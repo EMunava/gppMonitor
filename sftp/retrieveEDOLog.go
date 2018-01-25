@@ -28,21 +28,7 @@ func RetrieveEDOLog() {
 
 	dateStamp := dateConvert(dateLine)
 
-	currentDate := time.Now()
-	cd := currentDate.Format("02/01/2006")
-
-	if strings.Contains(ll, "successful") && cd == dateStamp {
-		sendAlert("EDO Posting request file successfully sent")
-		log.Println("EDO Posting request file successfully sent")
-	} else if strings.Contains(ll, "failed") && cd != dateStamp {
-		sendAlert("EDO Posting request file send failed")
-		log.Println("EDO Posting request file send failed!!")
-	} else if cd != dateStamp {
-		sendAlert("Last log entry and current date do not correlate")
-		log.Println("Last log entry timestamp and current date do not correlate")
-	} else {
-		log.Println("Error extracting log timestamp or success/failure result. Please consult log EDO file")
-	}
+	sendAlert(response(ll, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
 }
@@ -97,4 +83,22 @@ func dateConvert(date string) string {
 	dt, _ := time.Parse("Mon Jan _2 15:04:05 MST 2006", dtstr1)
 	dtstr2 := dt.Format("02/01/2006")
 	return dtstr2
+}
+
+func response(message, dateStamp string) string {
+
+	currentDate := time.Now()
+	cd := currentDate.Format("02/01/2006")
+
+	if strings.Contains(message, "successful") && cd == dateStamp {
+		log.Println("EDO Posting request file successfully sent")
+		return "EDO Posting request file successfully sent"
+	} else if strings.Contains(message, "failed") && cd == dateStamp {
+		log.Println("EDO Posting request file send failed!!")
+		return "EDO Posting request file send failed"
+	} else if cd != dateStamp {
+		log.Println("Last log entry timestamp and current date do not correlate")
+		return "Last log entry and current date do not correlate"
+	}
+	return "Error extracting log timestamp or success/failure result. Please consult log EDO file directly"
 }
