@@ -35,8 +35,6 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 		img, _ := wd.Screenshot()
 		sendError("Global and ZA dates have failed to rollover to the next business day", img, false)
 	}
-	img, _ := wd.Screenshot()
-	sendError("Just before logout", img, false)
 	logOut(wd)
 }
 
