@@ -3,6 +3,7 @@ package main
 import (
 	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/rest"
 	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/selenium"
+	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"log"
 	"time"
 )

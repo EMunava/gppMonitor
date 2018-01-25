@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/tebeka/selenium"
 	"io/ioutil"
@@ -16,7 +15,7 @@ import (
 
 type alertMessage struct {
 	Message, Image string
-	internalError  bool
+	InternalError  bool
 }
 
 func init() {
@@ -32,13 +31,14 @@ func CallSeleniumDateCheck() {
 }
 
 func schedule() {
-	gocron.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
-	gocron.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
-	gocron.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
+	sel := gocron.NewScheduler()
+	sel.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
 	_, schedule := gocron.NextRun()
-	fmt.Println(schedule)
+	log.Println(schedule)
 
-	<-gocron.Start()
+	<-sel.Start()
 }
 
 func seleniumDateRolloverCheck() {
@@ -91,7 +91,7 @@ func handleSeleniumError(err error, driver selenium.WebDriver) {
 }
 
 func sendError(message string, image []byte, internalError bool) {
-	a := alertMessage{Message: message, internalError: internalError}
+	a := alertMessage{Message: message, InternalError: internalError}
 	if image != nil {
 		a.Image = base64.StdEncoding.EncodeToString(image)
 	}
