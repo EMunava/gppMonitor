@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 /*
@@ -20,25 +21,33 @@ func RetrieveEDOLog() {
 	if err != nil {
 		log.Print(err)
 	}
-	ll, _, err := lastLine(numLines)
+	ll, dateLine, _, err := lastLine(numLines)
 	if err != nil {
 		log.Print(err)
 	}
 
-	if strings.Contains(ll, "successful") {
+	dateStamp := dateConvert(dateLine)
+
+	currentDate := time.Now()
+	cd := currentDate.Format("02/01/2006")
+
+	if strings.Contains(ll, "successful") && cd == dateStamp {
 		sendAlert("EDO Posting request file successfully sent")
 		log.Println("EDO Posting request file successfully sent")
-	} else if strings.Contains(ll, "failed") {
+	} else if strings.Contains(ll, "failed") && cd != dateStamp {
 		sendAlert("EDO Posting request file send failed")
 		log.Println("EDO Posting request file send failed!!")
+	} else if cd != dateStamp {
+		sendAlert("Last log entry and current date do not correlate")
+		log.Println("Last log entry timestamp and current date do not correlate")
 	} else {
-		log.Println("The last line did not contain success/failiure information")
+		log.Println("Error extracting log timestamp or success/failure result. Please consult log EDO file")
 	}
 
 	os.Remove("/tmp/EDO.log")
 }
 
-func lastLine(lineNum int) (line string, lastLine int, err error) {
+func lastLine(lineNum int) (line, dateLine string, lastLine int, err error) {
 	r, err := os.Open("/tmp/EDO.log")
 	if err != nil {
 		log.Print(err)
@@ -46,13 +55,16 @@ func lastLine(lineNum int) (line string, lastLine int, err error) {
 	sc := bufio.NewScanner(r)
 	for sc.Scan() {
 		lastLine++
+		if lastLine == (lineNum - 1) {
+			dateLine = sc.Text()
+		}
 		if lastLine == lineNum {
 			r.Close()
-			return sc.Text(), lastLine, sc.Err()
+			return sc.Text(), dateLine, lastLine, sc.Err()
 		}
 	}
 	r.Close()
-	return line, lastLine, io.EOF
+	return line, dateLine, lastLine, io.EOF
 }
 
 func lineCounter() (int, error) {
@@ -78,4 +90,11 @@ func lineCounter() (int, error) {
 			return count, err
 		}
 	}
+}
+
+func dateConvert(date string) string {
+	dtstr1 := date
+	dt, _ := time.Parse("Mon Jan _2 15:04:05 MST 2006", dtstr1)
+	dtstr2 := dt.Format("02/01/2006")
+	return dtstr2
 }
