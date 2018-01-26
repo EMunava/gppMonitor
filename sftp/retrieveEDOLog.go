@@ -35,7 +35,7 @@ func lastLines() (string, string) {
 		buf = append(buf, line)
 	}
 
-	if buf[len(buf)-1] == ""{
+	if buf[len(buf)-1] == "" {
 		date := buf[len(buf)-3]
 		result := buf[len(buf)-2]
 		return date, result
@@ -53,7 +53,7 @@ func dateConvert(date string) string {
 	return dtstr2
 }
 
-func openFile(targetFile string) (*os.File){
+func openFile(targetFile string) *os.File {
 	f, err := os.Open("/tmp/EDO.log")
 	if err != nil {
 		log.Fatal(err)
