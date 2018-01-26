@@ -25,10 +25,9 @@ func RetrieveEDOLog() {
 }
 
 func lastLines() (string, string) {
-	f, err := os.Open("/tmp/EDO.log")
-	if err != nil {
-		log.Fatal(err)
-	}
+
+	f := openFile("/tmp/EDO.log")
+
 	buf := make([]string, 32*1024)
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
@@ -52,6 +51,14 @@ func dateConvert(date string) string {
 	dt, _ := time.Parse("Mon Jan _2 15:04:05 MST 2006", dtstr1)
 	dtstr2 := dt.Format("02/01/2006")
 	return dtstr2
+}
+
+func openFile(targetFile string) (*os.File){
+	f, err := os.Open("/tmp/EDO.log")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return f
 }
 
 func response(message, dateStamp string) string {
