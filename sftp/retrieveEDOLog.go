@@ -2,8 +2,6 @@ package sftp
 
 import (
 	"bufio"
-	"bytes"
-	"io"
 	"log"
 	"os"
 	"strings"
@@ -17,65 +15,36 @@ func RetrieveEDOLog() {
 
 	retrieveFile("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest/", "EDO.log")
 
-	numLines, err := lineCounter()
-	if err != nil {
-		log.Print(err)
-	}
-	ll, dateLine, _, err := lastLine(numLines)
-	if err != nil {
-		log.Print(err)
-	}
+	dateLine, lastLine := lastLines()
 
 	dateStamp := dateConvert(dateLine)
 
-	sendAlert(response(ll, dateStamp))
+	sendAlert(response(lastLine, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
 }
 
-func lastLine(lineNum int) (line, dateLine string, lastLine int, err error) {
-	r, err := os.Open("/tmp/EDO.log")
+func lastLines() (string, string) {
+	f, err := os.Open("/tmp/EDO.log")
 	if err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
-	sc := bufio.NewScanner(r)
-	for sc.Scan() {
-		lastLine++
-		if lastLine == (lineNum - 1) {
-			dateLine = sc.Text()
-		}
-		if lastLine == lineNum {
-			r.Close()
-			return sc.Text(), dateLine, lastLine, sc.Err()
-		}
+	buf := make([]string, 32*1024)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		buf = append(buf, line)
 	}
-	r.Close()
-	return line, dateLine, lastLine, io.EOF
-}
 
-func lineCounter() (int, error) {
-	r, err := os.Open("/tmp/EDO.log")
-	if err != nil {
-		log.Print(err)
+	if buf[len(buf)-1] == ""{
+		date := buf[len(buf)-3]
+		result := buf[len(buf)-2]
+		return date, result
 	}
-	buf := make([]byte, 32*1024)
-	count := 0
-	lineSep := []byte{'\n'}
+	date := buf[len(buf)-2]
+	result := buf[len(buf)-1]
 
-	for {
-		c, err := r.Read(buf)
-		count += bytes.Count(buf[:c], lineSep)
-
-		switch {
-		case err == io.EOF:
-			r.Close()
-			return count, nil
-
-		case err != nil:
-			r.Close()
-			return count, err
-		}
-	}
+	return date, result
 }
 
 func dateConvert(date string) string {
