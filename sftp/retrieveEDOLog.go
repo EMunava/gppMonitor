@@ -54,7 +54,7 @@ func dateConvert(date string) string {
 }
 
 func openFile(targetFile string) *os.File {
-	f, err := os.Open("/tmp/EDO.log")
+	f, err := os.Open(targetFile)
 	if err != nil {
 		log.Fatal(err)
 	}
