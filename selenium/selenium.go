@@ -103,6 +103,20 @@ func waitForWaitFor(webDriver selenium.WebDriver) error {
 	})
 }
 
+func waitFor(webDriver selenium.WebDriver, findBy, selector string) error {
+
+	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+
+		elem, err := wb.FindElement(findBy, selector)
+		if err != nil {
+			return false, nil
+		}
+		r, err := elem.IsDisplayed()
+		return r, nil
+	})
+	return e
+}
+
 func handleSeleniumError(err error, driver selenium.WebDriver) {
 	debug.PrintStack()
 	if driver == nil {
@@ -140,8 +154,8 @@ func sendError(message string, image []byte, internalError bool) {
 
 }
 
-func byClassName(wd selenium.WebDriver, cn string){
-	item , err := wd.FindElement(selenium.ByClassName, cn)
+func byClassName(wd selenium.WebDriver, cn string) {
+	item, err := wd.FindElement(selenium.ByClassName, cn)
 	if err != nil {
 		panic(err)
 	}
@@ -151,8 +165,8 @@ func byClassName(wd selenium.WebDriver, cn string){
 	}
 }
 
-func byXPath(wd selenium.WebDriver, xp string){
-	item , err := wd.FindElement(selenium.ByXPATH, xp)
+func byXPath(wd selenium.WebDriver, xp string) {
+	item, err := wd.FindElement(selenium.ByXPATH, xp)
 	if err != nil {
 		panic(err)
 	}
@@ -162,8 +176,8 @@ func byXPath(wd selenium.WebDriver, xp string){
 	}
 }
 
-func byCSSSelector(wd selenium.WebDriver, cs string){
-	item , err := wd.FindElement(selenium.ByCSSSelector, cs)
+func byCSSSelector(wd selenium.WebDriver, cs string) {
+	item, err := wd.FindElement(selenium.ByCSSSelector, cs)
 	if err != nil {
 		panic(err)
 	}

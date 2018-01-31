@@ -21,7 +21,7 @@ func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
 
 	navigateToSubBatchDates(wd)
 
-	waitFor(wd, "ui-grid-cell-contents")
+	waitFor(wd, selenium.ByClassName, "ui-grid-cell-contents")
 
 	subBatchAmount := extractSubBatchDates(wd)
 
@@ -36,7 +36,7 @@ func navigateToSubBatchDates(wd selenium.WebDriver) {
 
 	byCSSSelector(wd, "#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
 
-	waitForXPath(wd, "//*[contains(text(), 'Individual Messages (')]")
+	waitFor(wd, selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
 
 	byXPath(wd, "//*[contains(text(), 'Individual Messages (')]")
 
@@ -88,18 +88,4 @@ func dateConfirmSubBatch(d1 string) int {
 		return 1
 	}
 	return 0
-}
-
-func waitForXPath(webDriver selenium.WebDriver, selector string) error {
-
-	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
-
-		elem, err := wb.FindElement(selenium.ByXPATH, selector)
-		if err != nil {
-			return false, nil
-		}
-		r, err := elem.IsDisplayed()
-		return r, nil
-	})
-	return e
 }

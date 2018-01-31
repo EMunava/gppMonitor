@@ -40,7 +40,7 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 func logIn(wd selenium.WebDriver) {
 
-	if err := waitFor(wd, "dh-input-field"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-input-field"); err != nil {
 		panic(err)
 	}
 
@@ -61,7 +61,7 @@ func logIn(wd selenium.WebDriver) {
 	loginButton.Submit()
 
 	//Wait for successful login
-	if err := waitFor(wd, "dh-customer-logo"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-customer-logo"); err != nil {
 		panic(err)
 	}
 
@@ -72,7 +72,7 @@ func navigateToDates(wd selenium.WebDriver) {
 
 	byXPath(wd, "//*[contains(text(), 'Business Setup')]")
 
-	if err := waitFor(wd, "ft-grid-click"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "ft-grid-click"); err != nil {
 		panic(err)
 	}
 }
@@ -94,24 +94,10 @@ func logOut(wd selenium.WebDriver) {
 		return
 	}
 
-	if err := waitFor(wd, "dh-input-field"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-input-field"); err != nil {
 		log.Println(err.Error())
 		return
 	}
-}
-
-func waitFor(webDriver selenium.WebDriver, selector string) error {
-
-	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
-
-		elem, err := wb.FindElement(selenium.ByClassName, selector)
-		if err != nil {
-			return false, nil
-		}
-		r, err := elem.IsDisplayed()
-		return r, nil
-	})
-	return e
 }
 
 func extractDates(wd selenium.WebDriver) int {
