@@ -1,16 +1,18 @@
 package selenium
 
 import (
+	"fmt"
 	"github.com/tebeka/selenium"
 	"strings"
 	"time"
-	"fmt"
 )
 
 func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
 
 	defer func() {
 		if err := recover(); err != nil {
+			img, _ := wd.Screenshot()
+			sendError(fmt.Sprint(err), img, true)
 			logOut(wd)
 		}
 	}()
@@ -19,16 +21,18 @@ func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
 
 	navigateToSubBatchDates(wd)
 
+	waitFor(wd, "ui-grid-cell-contents")
+
 	subBatchAmount := extractSubBatchDates(wd)
 
-	sendError(fmt.Sprint("Scheduled transactions: %d", subBatchAmount), nil, false)
+	sendError(fmt.Sprint("Scheduled transactions: ", subBatchAmount), nil, false)
 
 	logOut(wd)
 }
 
 func navigateToSubBatchDates(wd selenium.WebDriver) {
 
-	grid, err := wd.FindElement(selenium.ByCSSSelector, "dh-navigation-tabs-current-tab-button")
+	grid, err := wd.FindElement(selenium.ByClassName, "dh-navigation-tabs-current-tab-button")
 	if err != nil {
 		panic(err)
 	}
@@ -46,20 +50,19 @@ func navigateToSubBatchDates(wd selenium.WebDriver) {
 		panic(err)
 	}
 
-	im, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages')]")
+	waitForXPath(wd, "//*[contains(text(), 'Individual Messages (')]")
+
+	im, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
 	if err != nil {
 		panic(err)
 	}
-
 	if err = im.Click(); err != nil {
 		panic(err)
 	}
-
 	waiting, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Waiting')]")
 	if err != nil {
 		panic(err)
 	}
-
 	if err = waiting.Click(); err != nil {
 		panic(err)
 	}
@@ -68,8 +71,9 @@ func navigateToSubBatchDates(wd selenium.WebDriver) {
 	if err != nil {
 		panic(err)
 	}
-
-	waitSchedSubBatch.Click()
+	if err = waitSchedSubBatch.Click(); err != nil {
+		panic(err)
+	}
 
 }
 
@@ -110,9 +114,23 @@ func dateConfirmSubBatch(d1 string) int {
 
 	td := tomorrowDate.Format("02/01/2006")
 
-		t := strings.Compare(d1, td)
-		if t == 0 {
-			return 1
+	t := strings.Compare(d1, td)
+	if t == 0 {
+		return 1
+	}
+	return 0
+}
+
+func waitForXPath(webDriver selenium.WebDriver, selector string) error {
+
+	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+
+		elem, err := wb.FindElement(selenium.ByXPATH, selector)
+		if err != nil {
+			return false, nil
 		}
-		return 0
+		r, err := elem.IsDisplayed()
+		return r, nil
+	})
+	return e
 }

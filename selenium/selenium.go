@@ -30,11 +30,16 @@ func CallSeleniumDateCheck() {
 	seleniumDateRolloverCheck()
 }
 
+func CallWaitSchedBatchCheck() {
+	seleniumWaitSchedBatchCheck()
+}
+
 func schedule() {
 	sel := gocron.NewScheduler()
 	sel.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
 	sel.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
 	sel.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("00:35").Do(seleniumWaitSchedBatchCheck)
 	_, schedule := gocron.NextRun()
 	log.Println(schedule)
 
@@ -61,6 +66,28 @@ func seleniumDateRolloverCheck() {
 	}
 
 	confirmDateRollOver(webDriver)
+
+}
+
+func seleniumWaitSchedBatchCheck() {
+	var webDriver selenium.WebDriver
+	var err error
+	caps := selenium.Capabilities(map[string]interface{}{"browserName": "chrome"})
+	caps["chrome.switches"] = []string{"--ignore-certificate-errors"}
+
+	if webDriver, err = selenium.NewRemote(caps, seleniumServer()); err != nil {
+		handleSeleniumError(err, nil)
+		return
+	}
+
+	defer webDriver.Quit()
+
+	err = webDriver.Get(endpoint())
+	if err != nil {
+		handleSeleniumError(err, webDriver)
+		return
+	}
+
 	confirmWaitSchedSubBatch(webDriver)
 
 }

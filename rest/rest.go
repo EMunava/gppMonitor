@@ -28,7 +28,8 @@ func init() {
 
 func getRouter() *mux.Router {
 	r := mux.NewRouter()
-	r.HandleFunc("/dateRollover", runSelenium)
+	r.HandleFunc("/dateRollover", runDateRolloverCheck)
+	r.HandleFunc("/waitSubBatch", runWaitSchedBatchCheck)
 	r.HandleFunc("/retrieveEDOLog", retrieveEDOLog)
 	r.HandleFunc("/listFiles", listFiles)
 

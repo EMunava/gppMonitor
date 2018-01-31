@@ -64,11 +64,11 @@ func logIn(wd selenium.WebDriver) {
 	if err := waitFor(wd, "dh-customer-logo"); err != nil {
 		panic(err)
 	}
+
+	waitForWaitFor(wd)
 }
 
 func navigateToDates(wd selenium.WebDriver) {
-
-	waitForWaitFor(wd)
 
 	bs, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Business Setup')]")
 	if err != nil {
