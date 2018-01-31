@@ -140,6 +140,39 @@ func sendError(message string, image []byte, internalError bool) {
 
 }
 
+func byClassName(wd selenium.WebDriver, cn string){
+	item , err := wd.FindElement(selenium.ByClassName, cn)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
+}
+
+func byXPath(wd selenium.WebDriver, xp string){
+	item , err := wd.FindElement(selenium.ByXPATH, xp)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
+}
+
+func byCSSSelector(wd selenium.WebDriver, cs string){
+	item , err := wd.FindElement(selenium.ByCSSSelector, cs)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
+}
+
 func endpoint() string {
 	return os.Getenv("GPP_ENDPOINT")
 }

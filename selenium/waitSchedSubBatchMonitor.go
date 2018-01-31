@@ -32,48 +32,17 @@ func confirmWaitSchedSubBatch(wd selenium.WebDriver) {
 
 func navigateToSubBatchDates(wd selenium.WebDriver) {
 
-	grid, err := wd.FindElement(selenium.ByClassName, "dh-navigation-tabs-current-tab-button")
-	if err != nil {
-		panic(err)
-	}
+	byClassName(wd, "dh-navigation-tabs-current-tab-button")
 
-	if err = grid.Click(); err != nil {
-		panic(err)
-	}
-
-	sq, err := wd.FindElement(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
-	if err != nil {
-		panic(err)
-	}
-
-	if err = sq.Click(); err != nil {
-		panic(err)
-	}
+	byCSSSelector(wd, "#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
 
 	waitForXPath(wd, "//*[contains(text(), 'Individual Messages (')]")
 
-	im, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
-	if err != nil {
-		panic(err)
-	}
-	if err = im.Click(); err != nil {
-		panic(err)
-	}
-	waiting, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Waiting')]")
-	if err != nil {
-		panic(err)
-	}
-	if err = waiting.Click(); err != nil {
-		panic(err)
-	}
+	byXPath(wd, "//*[contains(text(), 'Individual Messages (')]")
 
-	waitSchedSubBatch, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Wait Sched Sub Batch')]")
-	if err != nil {
-		panic(err)
-	}
-	if err = waitSchedSubBatch.Click(); err != nil {
-		panic(err)
-	}
+	byXPath(wd, "//*[contains(text(), 'Waiting')]")
+
+	byXPath(wd, "//*[contains(text(), 'Wait Sched Sub Batch')]")
 
 }
 

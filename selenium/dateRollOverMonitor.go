@@ -70,14 +70,7 @@ func logIn(wd selenium.WebDriver) {
 
 func navigateToDates(wd selenium.WebDriver) {
 
-	bs, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Business Setup')]")
-	if err != nil {
-		panic(err)
-	}
-
-	if err = bs.Click(); err != nil {
-		panic(err)
-	}
+	byXPath(wd, "//*[contains(text(), 'Business Setup')]")
 
 	if err := waitFor(wd, "ft-grid-click"); err != nil {
 		panic(err)
