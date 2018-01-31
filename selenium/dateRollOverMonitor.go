@@ -116,12 +116,18 @@ func extractDates(wd selenium.WebDriver) int {
 	return Success
 }
 
-func extractionLoop(date selenium.WebElement) int {
+func extract(date selenium.WebElement) ([]string, string){
 	dValue, err := date.GetAttribute("innerText")
 	if err != nil {
 		sendError(err.Error(), nil, true)
 	}
 	sp := strings.Split(dValue, "/")
+	return sp, dValue
+}
+
+func extractionLoop(date selenium.WebElement) int {
+
+	sp, dValue := extract(date)
 
 	if len(sp) != 1 {
 		success := dateConfirm(dValue)

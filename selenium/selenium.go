@@ -30,6 +30,7 @@ func CallSeleniumDateCheck() {
 	seleniumDateRolloverCheck()
 }
 
+//CallWaitSchedBatchCheck retrieves the amount of transactions scheduled for tommorow's date.
 func CallWaitSchedBatchCheck() {
 	seleniumWaitSchedBatchCheck()
 }
