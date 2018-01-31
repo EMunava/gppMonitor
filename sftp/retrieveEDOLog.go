@@ -2,11 +2,10 @@ package sftp
 
 import (
 	"bufio"
-	"bytes"
-	"io"
 	"log"
 	"os"
 	"strings"
+	"time"
 )
 
 /*
@@ -16,66 +15,66 @@ func RetrieveEDOLog() {
 
 	retrieveFile("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest/", "EDO.log")
 
-	numLines, err := lineCounter()
-	if err != nil {
-		log.Print(err)
-	}
-	ll, _, err := lastLine(numLines)
-	if err != nil {
-		log.Print(err)
-	}
+	dateLine, lastLine := lastLines()
 
-	if strings.Contains(ll, "successful") {
-		sendAlert("EDO Posting request file successfully sent")
-		log.Println("EDO Posting request file successfully sent")
-	} else if strings.Contains(ll, "failed") {
-		sendAlert("EDO Posting request file send failed")
-		log.Println("EDO Posting request file send failed!!")
-	} else {
-		log.Println("The last line did not contain success/failiure information")
-	}
+	dateStamp := dateConvert(dateLine)
+
+	sendAlert(response(lastLine, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
 }
 
-func lastLine(lineNum int) (line string, lastLine int, err error) {
-	r, err := os.Open("/tmp/EDO.log")
-	if err != nil {
-		log.Print(err)
+func lastLines() (string, string) {
+
+	f := openFile("/tmp/EDO.log")
+
+	buf := make([]string, 32*1024)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		buf = append(buf, line)
 	}
-	sc := bufio.NewScanner(r)
-	for sc.Scan() {
-		lastLine++
-		if lastLine == lineNum {
-			r.Close()
-			return sc.Text(), lastLine, sc.Err()
-		}
+
+	if buf[len(buf)-1] == "" {
+		date := buf[len(buf)-3]
+		result := buf[len(buf)-2]
+		return date, result
 	}
-	r.Close()
-	return line, lastLine, io.EOF
+	date := buf[len(buf)-2]
+	result := buf[len(buf)-1]
+
+	return date, result
 }
 
-func lineCounter() (int, error) {
-	r, err := os.Open("/tmp/EDO.log")
+func dateConvert(date string) string {
+	dtstr1 := date
+	dt, _ := time.Parse("Mon Jan _2 15:04:05 MST 2006", dtstr1)
+	dtstr2 := dt.Format("02/01/2006")
+	return dtstr2
+}
+
+func openFile(targetFile string) *os.File {
+	f, err := os.Open(targetFile)
 	if err != nil {
-		log.Print(err)
+		log.Fatal(err)
 	}
-	buf := make([]byte, 32*1024)
-	count := 0
-	lineSep := []byte{'\n'}
+	return f
+}
 
-	for {
-		c, err := r.Read(buf)
-		count += bytes.Count(buf[:c], lineSep)
+func response(message, dateStamp string) string {
 
-		switch {
-		case err == io.EOF:
-			r.Close()
-			return count, nil
+	currentDate := time.Now()
+	cd := currentDate.Format("02/01/2006")
 
-		case err != nil:
-			r.Close()
-			return count, err
-		}
+	if strings.Contains(message, "successful") && cd == dateStamp {
+		log.Println("EDO Posting request file successfully sent")
+		return "EDO Posting request file successfully sent"
+	} else if strings.Contains(message, "failed") && cd == dateStamp {
+		log.Println("EDO Posting request file send failed!!")
+		return "EDO Posting request file send failed"
+	} else if cd != dateStamp {
+		log.Println("Last log entry timestamp and current date do not correlate")
+		return "Last log entry and current date do not correlate"
 	}
+	return "Error extracting log timestamp or success/failure result. Please consult log EDO file directly"
 }
