@@ -116,7 +116,7 @@ func extractDates(wd selenium.WebDriver) int {
 	return Success
 }
 
-func extract(date selenium.WebElement) ([]string, string){
+func extract(date selenium.WebElement) ([]string, string) {
 	dValue, err := date.GetAttribute("innerText")
 	if err != nil {
 		sendError(err.Error(), nil, true)
