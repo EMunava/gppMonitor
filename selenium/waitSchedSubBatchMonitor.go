@@ -62,14 +62,14 @@ func extractSubBatchDates(wd selenium.WebDriver) int {
 	return Success
 }
 
-func extractionLoopSubBatch(date selenium.WebElement) int {
-	dValue, err := date.GetAttribute("innerText")
+func extractionLoopSubBatch(futureDate selenium.WebElement) int {
+	dValue, err := futureDate.GetAttribute("innerText")
 	if err != nil {
 		sendError(err.Error(), nil, true)
 	}
-	sp := strings.Split(dValue, "/")
+	sep := strings.Split(dValue, "/")
 
-	if len(sp) != 1 {
+	if len(sep) != 1 {
 		success := dateConfirmSubBatch(dValue)
 		return success
 	}
