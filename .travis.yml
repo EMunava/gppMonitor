@@ -23,8 +23,8 @@ script:
  - bin/test.sh
  - go build
 
- after_script:
-   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT -t gocov
+after_script:
+ - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT -t gocov
 
 after_success:
   - bin/docker_push.sh
