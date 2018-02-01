@@ -5,12 +5,11 @@ metadata:
   labels:
     name: gpp-config
 data:
-  SSH_USER:
-  SSH_ENDPOINT:
-  GPP_USER:
-  GPP_ENDPOINT:
-  SELENIUM_SERVER: http://halSelenium.card-devops/wd/hub
-  HAL_ENDPOINT: http://hal/alert/image
+  SSH_USER: a
+  SSH_ENDPOINT: a
+  GPP_USER: a
+  GPP_ENDPOINT: a
+  SELENIUM_SERVER: a
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -29,7 +28,7 @@ spec:
         app: gpp-monitor
     spec:
       containers:
-      - image: zamedic/gpp-monitor:1.45.1
+      - image: zamedic/gpp-monitor:1.88.1
         name: gpp-monitor
         ports:
         - containerPort: 8080

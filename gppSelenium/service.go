@@ -1,14 +1,16 @@
 package gppSelenium
 
-
 import (
-"github.com/zamedic/go2hal/halSelenium"
-"github.com/zamedic/go2hal/alert"
-"github.com/tebeka/selenium"
+	"github.com/go-kit/kit/log"
+	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/tebeka/selenium"
+	"github.com/zamedic/go2hal/alert"
+	"github.com/zamedic/go2hal/halSelenium"
 	"os"
 )
 
-type Service interface{
+type Service interface {
 	WaitForWaitFor()
 	LogIn()
 	LogOut()
@@ -23,12 +25,12 @@ type Service interface{
 	WaitFor(findBy, selector string)
 }
 
-type service struct{
+type service struct {
 	halSelenium halSelenium.Service
 }
 
-func NewService(alert alert.Service)Service{
-	sel := halSelenium.NewChromeService(alert,seleniumServer())
+func newService(alert alert.Service) Service {
+	sel := halSelenium.NewChromeService(alert, seleniumServer())
 	err := sel.Driver().Get(endpoint())
 	if err != nil {
 		panic(err)
@@ -36,14 +38,35 @@ func NewService(alert alert.Service)Service{
 	return &service{sel}
 }
 
-func(s *service)HandleSeleniumError(internal bool, err error){
-	s.halSelenium.HandleSeleniumError(internal,err)
+func NewService(alert alert.Service) Service {
+	fieldKeys := []string{"method"}
+
+	service := newService(alert)
+	var logger log.Logger
+	service = NewLoggingService(log.With(logger, "component", "selenium"), service)
+	service = NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "api",
+		Subsystem: "selenium",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "api",
+			Subsystem: "selenium",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys), service)
+	return service
 }
 
-func (s * service)Driver() selenium.WebDriver{
+func (s *service) HandleSeleniumError(internal bool, err error) {
+	s.halSelenium.HandleSeleniumError(internal, err)
+}
+
+func (s *service) Driver() selenium.WebDriver {
 	return s.halSelenium.Driver()
 }
-func (s *service)WaitForWaitFor() {
+func (s *service) WaitForWaitFor() {
 	err := s.halSelenium.Driver().Wait(func(wb selenium.WebDriver) (bool, error) {
 		elem, err := wb.FindElement(selenium.ByCSSSelector, "body > div.dh-notification.ng-scope.success > div")
 		if err != nil {
@@ -57,9 +80,9 @@ func (s *service)WaitForWaitFor() {
 	}
 }
 
-func (s *service)LogIn() {
+func (s *service) LogIn() {
 
-	s.WaitFor( selenium.ByClassName, "dh-input-field")
+	s.WaitFor(selenium.ByClassName, "dh-input-field")
 
 	user, err := s.Driver().FindElement(selenium.ByName, "txtUserId")
 	if err != nil {
@@ -80,38 +103,37 @@ func (s *service)LogIn() {
 	//Wait for successful login
 	s.WaitFor(selenium.ByClassName, "dh-customer-logo")
 
-
 	s.WaitForWaitFor()
 }
 
-func (s *service)LogOut() {
+func (s *service) LogOut() {
 
 	signOutButton, err := s.halSelenium.Driver().FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
 	if err != nil {
-		s.HandleSeleniumError(true,err)
+		s.HandleSeleniumError(true, err)
 		return
 	}
 	err = signOutButton.Click()
 	if err != nil {
-		s.HandleSeleniumError(true,err)
+		s.HandleSeleniumError(true, err)
 		return
 	}
 
 	s.WaitFor(selenium.ByClassName, "dh-input-field")
 }
 
-func (s *service)ClickByClassName(cn string){
+func (s *service) ClickByClassName(cn string) {
 	s.halSelenium.ClickByClassName(cn)
 }
-func (s *service)ClickByXPath(xp string){
+func (s *service) ClickByXPath(xp string) {
 	s.halSelenium.ClickByXPath(xp)
 }
-func (s *service)ClickByCSSSelector(cs string){
+func (s *service) ClickByCSSSelector(cs string) {
 	s.halSelenium.ClickByCSSSelector(cs)
 }
 
-func (s *service)WaitFor(findBy, selector string){
-	s.WaitFor(findBy,selector)
+func (s *service) WaitFor(findBy, selector string) {
+	s.WaitFor(findBy, selector)
 }
 
 func gppUser() string {
@@ -129,5 +151,3 @@ func seleniumServer() string {
 func endpoint() string {
 	return os.Getenv("GPP_ENDPOINT")
 }
-
-

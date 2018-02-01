@@ -1,40 +1,36 @@
 package monitor
 
 import (
-	"github.com/jasonlvhit/gocron"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/daterollover"
-	"github.com/zamedic/go2hal/alert"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
+	"github.com/jasonlvhit/gocron"
 )
 
 type Service interface {
 }
 
 type service struct {
-	alert alert.Service
+	dateroloverService daterollover.Service
+	eodLogService      eodLog.Service
+	scheduleBatch      waitSchduleBatch.Service
 }
 
-func NewService(alert alert.Service) Service {
-	s := &service{alert: alert}
+func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Service, scheduleBatch waitSchduleBatch.Service) Service {
+	s := &service{dateroloverService: dateroloverService, eodLogService: eodLogService, scheduleBatch: scheduleBatch}
 	s.schedule()
 	return s
 }
 
 func (s *service) schedule() {
-	sftpService := sftp.NewService()
 
 	sel := gocron.NewScheduler()
-	dateRollover := func() { daterollover.NewService(s.alert).ConfirmDateRollOver() }
-	scheduleBatch := func() { waitSchduleBatch.NewService(s.alert).ConfirmWaitSchedSubBatch() }
-	eofFileCheck := func() { eodLog.NewService(sftpService, s.alert).RetrieveEDOLog() }
 
-	sel.Every(1).Day().At("23:30").Do(dateRollover)
-	sel.Every(1).Day().At("00:30").Do(dateRollover)
-	sel.Every(1).Day().At("01:10").Do(eofFileCheck)
-	sel.Every(1).Day().At("01:30").Do(dateRollover)
-	sel.Every(1).Day().At("00:35").Do(scheduleBatch)
+	sel.Every(1).Day().At("23:30").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("00:30").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
+	sel.Every(1).Day().At("01:30").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("00:35").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
 
 	gocron.NextRun()
 
