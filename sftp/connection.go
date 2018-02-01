@@ -1,38 +1,32 @@
 package sftp
 
 import (
-	"bytes"
-	"encoding/json"
-	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
-	"io/ioutil"
 	"log"
-	"net/http"
+
 	"os"
 	"strings"
 	"time"
 )
 
-func init() {
-	go func() {
-		schedule()
-	}()
+type Service interface {
+	/*
+	GetFilesInPath will return all the files within a path
+	 */
+	GetFilesInPath(path string) ([]File, error)
+
+	RetrieveFile(path, file string)
+}
+
+type service struct{
 
 }
 
-func schedule() {
-	conn := gocron.NewScheduler()
-	conn.Every(1).Day().At("01:10").Do(RetrieveEDOLog)
-	_, schedule := gocron.NextRun()
-	log.Println(schedule)
-
-	<-conn.Start()
+func NewService() Service{
+	return &service{}
 }
 
-type alert struct {
-	Message string
-}
 
 type File struct {
 	Name         string
@@ -41,7 +35,7 @@ type File struct {
 	LastModified time.Time
 }
 
-func connect() (*sftp.Client, error) {
+func (s *service)connect() (*sftp.Client, error) {
 
 	signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
 	if err != nil {
@@ -62,11 +56,9 @@ func connect() (*sftp.Client, error) {
 	return client, err
 }
 
-/*
-GetFilesInPath will return all the files within a path
-*/
-func GetFilesInPath(path string) ([]File, error) {
-	client, err := connect()
+
+func (s *service)GetFilesInPath(path string) ([]File, error) {
+	client, err := s.connect()
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +77,9 @@ func GetFilesInPath(path string) ([]File, error) {
 	return result, nil
 }
 
-func retrieveFile(path, file string) {
+func (s *service)RetrieveFile(path, file string) {
 
-	client, err := connect()
+	client, err := s.connect()
 	if err != nil {
 		log.Println(err)
 	}
@@ -110,25 +102,6 @@ func retrieveFile(path, file string) {
 	srcFile.WriteTo(dstFile)
 }
 
-func sendAlert(message string) {
-	a := alert{Message: message}
-
-	request, _ := json.Marshal(a)
-
-	response, err := http.Post(alertEndpoint(), "application/json", bytes.NewReader(request))
-	if err != nil {
-		log.Println(err.Error())
-		return
-	}
-
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		log.Println(ioutil.ReadAll(response.Body))
-	}
-
-}
-
 func sshUser() string {
 	return os.Getenv("SSH_USER")
 }
@@ -141,6 +114,4 @@ func sshEndpoint() string {
 	return os.Getenv("SSH_ENDPOINT")
 }
 
-func alertEndpoint() string {
-	return os.Getenv("HAL_ENDPOINT_ALERT")
-}
+

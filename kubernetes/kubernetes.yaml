@@ -9,7 +9,7 @@ data:
   SSH_ENDPOINT:
   GPP_USER:
   GPP_ENDPOINT:
-  SELENIUM_SERVER: http://selenium.card-devops/wd/hub
+  SELENIUM_SERVER: http://halSelenium.card-devops/wd/hub
   HAL_ENDPOINT: http://hal/alert/image
 ---
 apiVersion: extensions/v1beta1
