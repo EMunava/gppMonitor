@@ -15,11 +15,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/go-kit/kit/log/level"
 )
 
 func main() {
 
 	var logger log.Logger
+	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	logger = level.NewFilter(logger, level.AllowAll())
+	logger = log.With(logger, "ts", log.DefaultTimestamp)
 
 	fieldKeys := []string{"method"}
 
