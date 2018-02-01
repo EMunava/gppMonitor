@@ -3,162 +3,90 @@ package daterollover
 import (
 	"fmt"
 	"github.com/tebeka/selenium"
-	"log"
-	"os"
 	"strings"
 	"time"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/zamedic/go2hal/alert"
+	"github.com/pkg/errors"
 )
 
 type Service interface {
 	ConfirmDateRollOver()
 }
 
-type service struct{
-	Service
-
+type service struct {
+	selenium     gppSelenium.Service
+	alertService alert.Service
 }
 
-func NewService() Service {
-	return &service{}
+func NewService(alert alert.Service) Service {
+	return &service{alertService:alert}
 }
 
-
-
-
-func confirmDateRollOver() {
+func (s *service) ConfirmDateRollOver() {
+	s.selenium = gppSelenium.NewService(s.alertService)
+	defer s.selenium.Driver().Close()
 
 	defer func() {
 		if err := recover(); err != nil {
-			img, _ := wd.Screenshot()
-			sendError(fmt.Sprint(err), img, true)
-			logOut(wd)
+			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
+			s.selenium.LogOut()
 		}
 	}()
 
-	logIn(wd)
+	s.selenium.LogIn()
 
-	navigateToDates(wd)
+	s.navigateToDates()
 
-	Success := extractDates(wd)
+	Success := s.extractDates()
 
 	switch Success {
 
 	case 2:
-		sendError("Global and ZA date rollovers have completed successfully", nil, false)
+		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA date rollovers have completed successfully"))
 	case 1:
-		sendError("Global date rollover has completed successfully", nil, false)
+		s.selenium.HandleSeleniumError(false, errors.New("Global date rollover has completed successfully"))
 	case 0:
-		img, _ := wd.Screenshot()
-		sendError("Global and ZA dates have failed to rollover to the next business day", img, false)
+		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA dates have failed to rollover to the next business day"))
 	}
-	logOut(wd)
+	s.selenium.LogOut()
 }
 
-func logIn(wd selenium.WebDriver) {
+func (s *service) navigateToDates() {
 
-	if err := waitFor(wd, "dh-input-field"); err != nil {
-		panic(err)
-	}
+	s.selenium.ClickByXPath("//*[contains(text(), 'Business Setup')]")
 
-	user, err := wd.FindElement(selenium.ByName, "txtUserId")
-	if err != nil {
-		panic(err)
-	}
-
-	pass, err := wd.FindElement(selenium.ByName, "txtPassword")
-	if err != nil {
-		panic(err)
-	}
-
-	loginButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign In')]")
-
-	user.SendKeys(gppUser())
-	pass.SendKeys(gppPass())
-	loginButton.Submit()
-
-	//Wait for successful login
-	if err := waitFor(wd, "dh-customer-logo"); err != nil {
-		panic(err)
-	}
+	s.selenium.WaitFor(selenium.ByClassName, "ft-grid-click")
 }
 
-func navigateToDates(wd selenium.WebDriver) {
-
-	waitForWaitFor(wd)
-
-	bs, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Business Setup')]")
-	if err != nil {
-		panic(err)
-	}
-
-	if err = bs.Click(); err != nil {
-		panic(err)
-	}
-
-	if err := waitFor(wd, "ft-grid-click"); err != nil {
-		panic(err)
-	}
-}
-
-func logOut(wd selenium.WebDriver) {
-
-	signOutButton, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Sign Out')]")
-	if err != nil {
-		img, _ := wd.Screenshot()
-		sendError(fmt.Sprint(err), img, true)
-		log.Println(err.Error())
-		return
-	}
-	err = signOutButton.Click()
-	if err != nil {
-		img, _ := wd.Screenshot()
-		sendError(fmt.Sprint(err), img, true)
-		log.Println(err.Error())
-		return
-	}
-
-	if err := waitFor(wd, "dh-input-field"); err != nil {
-		log.Println(err.Error())
-		return
-	}
-}
-
-func waitFor(webDriver selenium.WebDriver, selector string) error {
-
-	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
-
-		elem, err := wb.FindElement(selenium.ByClassName, selector)
-		if err != nil {
-			return false, nil
-		}
-		r, err := elem.IsDisplayed()
-		return r, nil
-	})
-	return e
-}
-
-func extractDates(wd selenium.WebDriver) int {
+func (s *service) extractDates() int {
 
 	Success := 0
 
-	dates, err := wd.FindElements(selenium.ByClassName, "ui-grid-cell-contents")
+	dates, err := s.selenium.Driver().FindElements(selenium.ByClassName, "ui-grid-cell-contents")
 	if err != nil {
 		panic(err)
 	}
 
 	for _, date := range dates {
 
-		Success += extractionLoop(date)
+		Success += s.extractionLoop(date)
 	}
 	return Success
 }
 
-func extractionLoop(date selenium.WebElement) int {
+func (s *service) extract(date selenium.WebElement) ([]string, string) {
 	dValue, err := date.GetAttribute("innerText")
 	if err != nil {
-		sendError(err.Error(), nil, true)
+		s.selenium.HandleSeleniumError(true, err)
 	}
 	sp := strings.Split(dValue, "/")
+	return sp, dValue
+}
+
+func (s *service) extractionLoop(date selenium.WebElement) int {
+
+	sp, dValue := s.extract(date)
 
 	if len(sp) != 1 {
 		success := dateConfirm(dValue)
@@ -187,12 +115,4 @@ func dateConfirm(d1 string) int {
 		return 1
 	}
 	return 0
-}
-
-func gppUser() string {
-	return os.Getenv("GPP_USER")
-}
-
-func gppPass() string {
-	return os.Getenv("GPP_PASSWORD")
 }

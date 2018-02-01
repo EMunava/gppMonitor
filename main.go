@@ -1,16 +1,31 @@
 package main
 
 import (
-	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/rest"
-	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/selenium"
-	_ "github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
-	"log"
-	"time"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
+	"github.com/zamedic/go2hal/alert"
+	"os"
+	"os/signal"
+	"syscall"
+	"fmt"
+	"github.com/go-kit/kit/log"
 )
 
 func main() {
-	log.Println("GPP Monitor")
-	for true {
-		time.Sleep(10 * time.Minute)
-	}
+
+	var logger log.Logger
+
+	alertService := alert.NewKubernetesAlertProxy("")
+	_ = monitor.NewService(alertService)
+
+	errs := make(chan error, 2)
+
+	go func() {
+		c := make(chan os.Signal)
+		signal.Notify(c, syscall.SIGINT)
+		errs <- fmt.Errorf("%s", <-c)
+	}()
+
+	logger.Log("terminated", <-errs)
+
+
 }
