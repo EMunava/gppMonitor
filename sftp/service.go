@@ -12,21 +12,19 @@ import (
 
 type Service interface {
 	/*
-	GetFilesInPath will return all the files within a path
-	 */
+		GetFilesInPath will return all the files within a path
+	*/
 	GetFilesInPath(path string) ([]File, error)
 
 	RetrieveFile(path, file string)
 }
 
-type service struct{
-
+type service struct {
 }
 
-func NewService() Service{
+func NewService() Service {
 	return &service{}
 }
-
 
 type File struct {
 	Name         string
@@ -35,7 +33,7 @@ type File struct {
 	LastModified time.Time
 }
 
-func (s *service)connect() (*sftp.Client, error) {
+func (s *service) connect() (*sftp.Client, error) {
 
 	signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
 	if err != nil {
@@ -56,8 +54,7 @@ func (s *service)connect() (*sftp.Client, error) {
 	return client, err
 }
 
-
-func (s *service)GetFilesInPath(path string) ([]File, error) {
+func (s *service) GetFilesInPath(path string) ([]File, error) {
 	client, err := s.connect()
 	if err != nil {
 		return nil, err
@@ -77,7 +74,7 @@ func (s *service)GetFilesInPath(path string) ([]File, error) {
 	return result, nil
 }
 
-func (s *service)RetrieveFile(path, file string) {
+func (s *service) RetrieveFile(path, file string) {
 
 	client, err := s.connect()
 	if err != nil {
@@ -113,5 +110,3 @@ func privateKey() string {
 func sshEndpoint() string {
 	return os.Getenv("SSH_ENDPOINT")
 }
-
-

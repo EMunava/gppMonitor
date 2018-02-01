@@ -1,28 +1,28 @@
 package eodLog
 
 import (
-	"os"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"bufio"
-	"time"
-	"strings"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/zamedic/go2hal/alert"
+	"os"
+	"strings"
+	"time"
 )
 
 type Service interface {
 	/*
-	RetrieveEDOLog copies contents of EDO.log to a local file of the same name which is then analysed for the success/failure of Edo Posing request file send
+		RetrieveEDOLog copies contents of EDO.log to a local file of the same name which is then analysed for the success/failure of Edo Posing request file send
 	*/
 	RetrieveEDOLog()
 }
 
 type service struct {
-	sftpService sftp.Service
+	sftpService  sftp.Service
 	alertService alert.Service
 }
 
-func NewService(sftpService sftp.Service,alertService alert.Service) Service {
-	return &service{sftpService:sftpService,alertService:alertService}
+func NewService(sftpService sftp.Service, alertService alert.Service) Service {
+	return &service{sftpService: sftpService, alertService: alertService}
 }
 
 func (s *service) RetrieveEDOLog() {

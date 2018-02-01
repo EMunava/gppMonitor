@@ -2,12 +2,12 @@ package daterollover
 
 import (
 	"fmt"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
+	"github.com/zamedic/go2hal/alert"
 	"strings"
 	"time"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
-	"github.com/zamedic/go2hal/alert"
-	"github.com/pkg/errors"
 )
 
 type Service interface {
@@ -20,7 +20,7 @@ type service struct {
 }
 
 func NewService(alert alert.Service) Service {
-	return &service{alertService:alert}
+	return &service{alertService: alert}
 }
 
 func (s *service) ConfirmDateRollOver() {

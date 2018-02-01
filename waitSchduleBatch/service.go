@@ -1,15 +1,13 @@
 package waitSchduleBatch
 
-
-
 import (
 	"fmt"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
+	"github.com/zamedic/go2hal/alert"
 	"strings"
 	"time"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
-	"github.com/zamedic/go2hal/alert"
-	"github.com/pkg/errors"
 )
 
 type Service interface {
@@ -18,14 +16,14 @@ type Service interface {
 
 type service struct {
 	selenium gppSelenium.Service
-	alert alert.Service
+	alert    alert.Service
 }
 
 func NewService(alert alert.Service) Service {
-	return &service{alert:alert}
+	return &service{alert: alert}
 }
 
-func (s *service)ConfirmWaitSchedSubBatch() {
+func (s *service) ConfirmWaitSchedSubBatch() {
 
 	s.selenium = gppSelenium.NewService(s.alert)
 
@@ -35,7 +33,7 @@ func (s *service)ConfirmWaitSchedSubBatch() {
 
 	defer func() {
 		if err := recover(); err != nil {
-			s.selenium.HandleSeleniumError(true,errors.New(fmt.Sprint(err)))
+			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
 		}
 	}()
@@ -48,24 +46,24 @@ func (s *service)ConfirmWaitSchedSubBatch() {
 
 	subBatchAmount := s.extractSubBatchDates(wd)
 
-	s.selenium.HandleSeleniumError(false,fmt.Errorf("Scheduled transactions: ", subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("Scheduled transactions: ", subBatchAmount))
 
 	s.selenium.LogOut()
 }
 
-func (s *service)navigateToSubBatchDates(wd selenium.WebDriver) {
+func (s *service) navigateToSubBatchDates(wd selenium.WebDriver) {
 
 	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
 
-	s.selenium.ClickByCSSSelector( "#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
+	s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
 
-	s.selenium.WaitFor( selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
+	s.selenium.WaitFor(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
 
-	s.selenium.ClickByXPath( "//*[contains(text(), 'Individual Messages (')]")
+	s.selenium.ClickByXPath("//*[contains(text(), 'Individual Messages (')]")
 
-	s.selenium.ClickByXPath( "//*[contains(text(), 'Waiting')]")
+	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 
-	s.selenium.ClickByXPath( "//*[contains(text(), 'Wait Sched Sub Batch')]")
+	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Sched Sub Batch')]")
 
 }
 
@@ -85,7 +83,7 @@ func (s *service) extractSubBatchDates(wd selenium.WebDriver) int {
 	return Success
 }
 
-func (s *service)extractionLoopSubBatch(date selenium.WebElement) int {
+func (s *service) extractionLoopSubBatch(date selenium.WebElement) int {
 	sp, dValue := s.extract(date)
 
 	if len(sp) != 1 {
