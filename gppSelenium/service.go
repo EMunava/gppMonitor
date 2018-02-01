@@ -27,8 +27,8 @@ type service struct{
 	halSelenium halSelenium.Service
 }
 
-func NewService(service alert.Service)Service{
-	sel := halSelenium.NewChromeService(service,seleniumServer())
+func NewService(alert alert.Service)Service{
+	sel := halSelenium.NewChromeService(alert,seleniumServer())
 	err := sel.Driver().Get(endpoint())
 	if err != nil {
 		panic(err)
