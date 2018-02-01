@@ -1,4 +1,4 @@
-package selenium
+package daterollover
 
 import (
 	"fmt"
@@ -9,7 +9,23 @@ import (
 	"time"
 )
 
-func confirmDateRollOver(wd selenium.WebDriver) {
+type Service interface {
+	ConfirmDateRollOver()
+}
+
+type service struct{
+	Service
+
+}
+
+func NewService() Service {
+	return &service{}
+}
+
+
+
+
+func confirmDateRollOver() {
 
 	defer func() {
 		if err := recover(); err != nil {
