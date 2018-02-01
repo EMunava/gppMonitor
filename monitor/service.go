@@ -18,7 +18,9 @@ type service struct {
 
 func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Service, scheduleBatch waitSchduleBatch.Service) Service {
 	s := &service{dateroloverService: dateroloverService, eodLogService: eodLogService, scheduleBatch: scheduleBatch}
-	s.schedule()
+	go func() {
+		s.schedule()
+	}()
 	return s
 }
 

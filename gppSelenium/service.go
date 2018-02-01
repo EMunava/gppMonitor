@@ -8,6 +8,7 @@ import (
 	"github.com/zamedic/go2hal/alert"
 	"github.com/zamedic/go2hal/halSelenium"
 	"os"
+	"github.com/go-kit/kit/log/level"
 )
 
 type Service interface {
@@ -43,6 +44,9 @@ func NewService(alert alert.Service) Service {
 
 	service := newService(alert)
 	var logger log.Logger
+	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
+	logger = level.NewFilter(logger, level.AllowAll())
+	logger = log.With(logger, "ts", log.DefaultTimestamp)
 	service = NewLoggingService(log.With(logger, "component", "selenium"), service)
 	service = NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
