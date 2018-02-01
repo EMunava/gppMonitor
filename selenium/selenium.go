@@ -30,11 +30,17 @@ func CallSeleniumDateCheck() {
 	seleniumDateRolloverCheck()
 }
 
+//CallWaitSchedBatchCheck retrieves the amount of transactions scheduled for tommorow's date.
+func CallWaitSchedBatchCheck() {
+	seleniumWaitSchedBatchCheck()
+}
+
 func schedule() {
 	sel := gocron.NewScheduler()
 	sel.Every(1).Day().At("23:30").Do(seleniumDateRolloverCheck)
 	sel.Every(1).Day().At("00:30").Do(seleniumDateRolloverCheck)
 	sel.Every(1).Day().At("01:30").Do(seleniumDateRolloverCheck)
+	sel.Every(1).Day().At("00:35").Do(seleniumWaitSchedBatchCheck)
 	_, schedule := gocron.NextRun()
 	log.Println(schedule)
 
@@ -64,6 +70,29 @@ func seleniumDateRolloverCheck() {
 
 }
 
+func seleniumWaitSchedBatchCheck() {
+	var webDriver selenium.WebDriver
+	var err error
+	caps := selenium.Capabilities(map[string]interface{}{"browserName": "chrome"})
+	caps["chrome.switches"] = []string{"--ignore-certificate-errors"}
+
+	if webDriver, err = selenium.NewRemote(caps, seleniumServer()); err != nil {
+		handleSeleniumError(err, nil)
+		return
+	}
+
+	defer webDriver.Quit()
+
+	err = webDriver.Get(endpoint())
+	if err != nil {
+		handleSeleniumError(err, webDriver)
+		return
+	}
+
+	confirmWaitSchedSubBatch(webDriver)
+
+}
+
 func waitForWaitFor(webDriver selenium.WebDriver) error {
 	return webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
 		elem, err := wb.FindElement(selenium.ByCSSSelector, "body > div.dh-notification.ng-scope.success > div")
@@ -73,6 +102,20 @@ func waitForWaitFor(webDriver selenium.WebDriver) error {
 		r, err := elem.IsDisplayed()
 		return !r, nil
 	})
+}
+
+func waitFor(webDriver selenium.WebDriver, findBy, selector string) error {
+
+	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
+
+		elem, err := wb.FindElement(findBy, selector)
+		if err != nil {
+			return false, nil
+		}
+		r, err := elem.IsDisplayed()
+		return r, nil
+	})
+	return e
 }
 
 func handleSeleniumError(err error, driver selenium.WebDriver) {
@@ -110,6 +153,39 @@ func sendError(message string, image []byte, internalError bool) {
 		log.Println(ioutil.ReadAll(response.Body))
 	}
 
+}
+
+func byClassName(wd selenium.WebDriver, cn string) {
+	item, err := wd.FindElement(selenium.ByClassName, cn)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
+}
+
+func byXPath(wd selenium.WebDriver, xp string) {
+	item, err := wd.FindElement(selenium.ByXPATH, xp)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
+}
+
+func byCSSSelector(wd selenium.WebDriver, cs string) {
+	item, err := wd.FindElement(selenium.ByCSSSelector, cs)
+	if err != nil {
+		panic(err)
+	}
+
+	if err = item.Click(); err != nil {
+		panic(err)
+	}
 }
 
 func endpoint() string {

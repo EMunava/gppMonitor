@@ -40,7 +40,7 @@ func confirmDateRollOver(wd selenium.WebDriver) {
 
 func logIn(wd selenium.WebDriver) {
 
-	if err := waitFor(wd, "dh-input-field"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-input-field"); err != nil {
 		panic(err)
 	}
 
@@ -61,25 +61,18 @@ func logIn(wd selenium.WebDriver) {
 	loginButton.Submit()
 
 	//Wait for successful login
-	if err := waitFor(wd, "dh-customer-logo"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-customer-logo"); err != nil {
 		panic(err)
 	}
+
+	waitForWaitFor(wd)
 }
 
 func navigateToDates(wd selenium.WebDriver) {
 
-	waitForWaitFor(wd)
+	byXPath(wd, "//*[contains(text(), 'Business Setup')]")
 
-	bs, err := wd.FindElement(selenium.ByXPATH, "//*[contains(text(), 'Business Setup')]")
-	if err != nil {
-		panic(err)
-	}
-
-	if err = bs.Click(); err != nil {
-		panic(err)
-	}
-
-	if err := waitFor(wd, "ft-grid-click"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "ft-grid-click"); err != nil {
 		panic(err)
 	}
 }
@@ -101,24 +94,10 @@ func logOut(wd selenium.WebDriver) {
 		return
 	}
 
-	if err := waitFor(wd, "dh-input-field"); err != nil {
+	if err := waitFor(wd, selenium.ByClassName, "dh-input-field"); err != nil {
 		log.Println(err.Error())
 		return
 	}
-}
-
-func waitFor(webDriver selenium.WebDriver, selector string) error {
-
-	e := webDriver.Wait(func(wb selenium.WebDriver) (bool, error) {
-
-		elem, err := wb.FindElement(selenium.ByClassName, selector)
-		if err != nil {
-			return false, nil
-		}
-		r, err := elem.IsDisplayed()
-		return r, nil
-	})
-	return e
 }
 
 func extractDates(wd selenium.WebDriver) int {
@@ -137,12 +116,18 @@ func extractDates(wd selenium.WebDriver) int {
 	return Success
 }
 
-func extractionLoop(date selenium.WebElement) int {
+func extract(date selenium.WebElement) ([]string, string) {
 	dValue, err := date.GetAttribute("innerText")
 	if err != nil {
 		sendError(err.Error(), nil, true)
 	}
 	sp := strings.Split(dValue, "/")
+	return sp, dValue
+}
+
+func extractionLoop(date selenium.WebElement) int {
+
+	sp, dValue := extract(date)
 
 	if len(sp) != 1 {
 		success := dateConfirm(dValue)
