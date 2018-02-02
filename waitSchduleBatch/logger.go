@@ -21,5 +21,5 @@ func (s *loggingService) WaitForWaitFor() {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.ConfirmWaitSchedSubBatch()
+	s.Service.ConfirmWaitSchedSubBatch()
 }

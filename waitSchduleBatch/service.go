@@ -19,17 +19,13 @@ type service struct {
 	alert    alert.Service
 }
 
-func NewService(alert alert.Service) Service {
-	return &service{alert: alert}
+func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
+	return &service{alert: alert, selenium: selenium}
 }
 
 func (s *service) ConfirmWaitSchedSubBatch() {
-
-	s.selenium = gppSelenium.NewService(s.alert)
-
+	s.selenium.NewClient()
 	defer s.selenium.Driver().Close()
-
-	wd := s.selenium.Driver()
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -40,18 +36,18 @@ func (s *service) ConfirmWaitSchedSubBatch() {
 
 	s.selenium.LogIn()
 
-	s.navigateToSubBatchDates(wd)
+	s.navigateToSubBatchDates()
 
 	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
 
-	subBatchAmount := s.extractSubBatchDates(wd)
+	subBatchAmount := s.extractSubBatchDates()
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Scheduled transactions: ", subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("wait scheduled sub batch transactions: %v", subBatchAmount))
 
 	s.selenium.LogOut()
 }
 
-func (s *service) navigateToSubBatchDates(wd selenium.WebDriver) {
+func (s *service) navigateToSubBatchDates() {
 
 	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
 
@@ -67,11 +63,11 @@ func (s *service) navigateToSubBatchDates(wd selenium.WebDriver) {
 
 }
 
-func (s *service) extractSubBatchDates(wd selenium.WebDriver) int {
+func (s *service) extractSubBatchDates() int {
 
 	Success := 0
 
-	dates, err := wd.FindElements(selenium.ByClassName, "ui-grid-cell-contents")
+	dates, err := s.selenium.Driver().FindElements(selenium.ByClassName, "ui-grid-cell-contents")
 	if err != nil {
 		panic(err)
 	}

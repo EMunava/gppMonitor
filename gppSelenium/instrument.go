@@ -25,21 +25,21 @@ func (s *instrumentingService) WaitForWaitFor() {
 		s.requestCount.With("method", "WaitForWaitFor").Add(1)
 		s.requestLatency.With("method", "WaitForWaitFor").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.WaitForWaitFor()
+	s.Service.WaitForWaitFor()
 }
 func (s *instrumentingService) LogIn() {
 	defer func(begin time.Time) {
 		s.requestCount.With("method", "LogIn").Add(1)
 		s.requestLatency.With("method", "LogIn").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.LogIn()
+	s.Service.LogIn()
 }
 func (s *instrumentingService) LogOut() {
 	defer func(begin time.Time) {
 		s.requestCount.With("method", "LogOut").Add(1)
 		s.requestLatency.With("method", "LogOut").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.LogOut()
+	s.Service.LogOut()
 }
 
 // Override
@@ -48,21 +48,21 @@ func (s *instrumentingService) HandleSeleniumError(internal bool, err error) {
 		s.requestCount.With("method", "HandleSeleniumError").Add(1)
 		s.requestLatency.With("method", "HandleSeleniumError").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.HandleSeleniumError(internal, err)
+	s.Service.HandleSeleniumError(internal, err)
 }
 func (s *instrumentingService) Driver() selenium.WebDriver {
 	defer func(begin time.Time) {
 		s.requestCount.With("method", "Driver").Add(1)
 		s.requestLatency.With("method", "Driver").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return s.Driver()
+	return s.Service.Driver()
 }
 func (s *instrumentingService) ClickByClassName(cn string) {
 	defer func(begin time.Time) {
 		s.requestCount.With("method", "ClickByClassName").Add(1)
 		s.requestLatency.With("method", "ClickByClassName").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.ClickByClassName(cn)
+	s.Service.ClickByClassName(cn)
 
 }
 func (s *instrumentingService) ClickByXPath(xp string) {
@@ -70,7 +70,7 @@ func (s *instrumentingService) ClickByXPath(xp string) {
 		s.requestCount.With("method", "ClickByXPath").Add(1)
 		s.requestLatency.With("method", "ClickByXPath").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.ClickByXPath(xp)
+	s.Service.ClickByXPath(xp)
 
 }
 func (s *instrumentingService) ClickByCSSSelector(cs string) {
@@ -78,7 +78,7 @@ func (s *instrumentingService) ClickByCSSSelector(cs string) {
 		s.requestCount.With("method", "ClickByCSSSelector").Add(1)
 		s.requestLatency.With("method", "ClickByCSSSelector").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.ClickByCSSSelector(cs)
+	s.Service.ClickByCSSSelector(cs)
 
 }
 
@@ -87,5 +87,13 @@ func (s *instrumentingService) WaitFor(findBy, selector string) {
 		s.requestCount.With("method", "WaitFor").Add(1)
 		s.requestLatency.With("method", "WaitFor").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.WaitFor(findBy, selector)
+	s.Service.WaitFor(findBy, selector)
+}
+
+func (s *instrumentingService) NewClient() error {
+	defer func(begin time.Time) {
+		s.requestCount.With("method", "NewClient").Add(1)
+		s.requestLatency.With("method", "NewClient").Observe(time.Since(begin).Seconds())
+	}(time.Now())
+	return s.Service.NewClient()
 }

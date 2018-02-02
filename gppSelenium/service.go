@@ -1,14 +1,10 @@
 package gppSelenium
 
 import (
-	"github.com/go-kit/kit/log"
-	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
 	"github.com/zamedic/go2hal/halSelenium"
 	"os"
-	"github.com/go-kit/kit/log/level"
 )
 
 type Service interface {
@@ -17,6 +13,8 @@ type Service interface {
 	LogOut()
 
 	// Override
+	NewClient() error
+
 	HandleSeleniumError(internal bool, err error)
 	Driver() selenium.WebDriver
 	ClickByClassName(cn string)
@@ -30,39 +28,19 @@ type service struct {
 	halSelenium halSelenium.Service
 }
 
-func newService(alert alert.Service) Service {
+func NewService(alert alert.Service) Service {
 	sel := halSelenium.NewChromeService(alert, seleniumServer())
-	err := sel.Driver().Get(endpoint())
-	if err != nil {
-		panic(err)
-	}
 	return &service{sel}
 }
 
-func NewService(alert alert.Service) Service {
-	fieldKeys := []string{"method"}
-
-	service := newService(alert)
-	var logger log.Logger
-	logger = log.NewLogfmtLogger(log.NewSyncWriter(os.Stderr))
-	logger = level.NewFilter(logger, level.AllowAll())
-	logger = log.With(logger, "ts", log.DefaultTimestamp)
-	service = NewLoggingService(log.With(logger, "component", "selenium"), service)
-	service = NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
-		Namespace: "api",
-		Subsystem: "selenium",
-		Name:      "request_count",
-		Help:      "Number of requests received.",
-	}, fieldKeys),
-		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
-			Namespace: "api",
-			Subsystem: "selenium",
-			Name:      "request_latency_microseconds",
-			Help:      "Total duration of requests in microseconds.",
-		}, fieldKeys), service)
-	return service
+func (s *service) NewClient() error {
+	s.halSelenium.NewClient(seleniumServer())
+	err := s.Driver().Get(endpoint())
+	if err != nil {
+		return err
+	}
+	return nil
 }
-
 func (s *service) HandleSeleniumError(internal bool, err error) {
 	s.halSelenium.HandleSeleniumError(internal, err)
 }
@@ -137,7 +115,7 @@ func (s *service) ClickByCSSSelector(cs string) {
 }
 
 func (s *service) WaitFor(findBy, selector string) {
-	s.WaitFor(findBy, selector)
+	s.halSelenium.WaitFor(findBy, selector)
 }
 
 func gppUser() string {

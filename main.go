@@ -4,18 +4,20 @@ import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/daterollover"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
 	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/log/level"
 	kitprometheus "github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/zamedic/go2hal/alert"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/go-kit/kit/log/level"
 )
 
 func main() {
@@ -29,7 +31,22 @@ func main() {
 
 	alertService := alert.NewKubernetesAlertProxy("")
 
-	dateRolloverService := daterollover.NewService(alertService)
+	gppSeleniumService := gppSelenium.NewService(alertService)
+	gppSeleniumService = gppSelenium.NewLoggingService(log.With(logger, "component", "selenium"), gppSeleniumService)
+	gppSeleniumService = gppSelenium.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "api",
+		Subsystem: "selenium",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "api",
+			Subsystem: "selenium",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys), gppSeleniumService)
+
+	dateRolloverService := daterollover.NewService(alertService, gppSeleniumService)
 	dateRolloverService = daterollover.NewLoggingService(log.With(logger, "component", "date_rollover"), dateRolloverService)
 	dateRolloverService = daterollover.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
@@ -74,7 +91,7 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), eodLogService)
 
-	waitScheduleBatchService := waitSchduleBatch.NewService(alertService)
+	waitScheduleBatchService := waitSchduleBatch.NewService(alertService, gppSeleniumService)
 	waitScheduleBatchService = waitSchduleBatch.NewLoggingService(log.With(logger, "component", "wait_schedule_batch"), waitScheduleBatchService)
 	waitScheduleBatchService = waitSchduleBatch.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
@@ -98,10 +115,13 @@ func main() {
 	mux.Handle("/eodfile", eodLog.MakeHandler(eodLogService, httpLogger))
 	mux.Handle("/waitchedulebatch", waitSchduleBatch.MakeHandler(waitScheduleBatchService, httpLogger))
 
+	http.Handle("/", accessControl(mux))
+	http.Handle("/metrics", promhttp.Handler())
+
 	errs := make(chan error, 2)
 	go func() {
-		logger.Log("transport", "http", "address", ":8000", "msg", "listening")
-		errs <- http.ListenAndServe(":8000", nil)
+		logger.Log("transport", "http", "address", ":8001", "msg", "listening")
+		errs <- http.ListenAndServe(":8001", nil)
 	}()
 	go func() {
 		c := make(chan os.Signal)
@@ -111,4 +131,18 @@ func main() {
 
 	logger.Log("terminated", <-errs)
 
+}
+
+func accessControl(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type")
+
+		if r.Method == "OPTIONS" {
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	})
 }

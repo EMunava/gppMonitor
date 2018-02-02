@@ -24,7 +24,7 @@ func (s *instrumentingService) GetFilesInPath(path string) ([]File, error) {
 		s.requestCount.With("method", "GetFilesInPath").Add(1)
 		s.requestLatency.With("method", "GetFilesInPath").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	return s.GetFilesInPath(path)
+	return s.Service.GetFilesInPath(path)
 }
 
 func (s *instrumentingService) RetrieveFile(path, file string) {
@@ -32,5 +32,5 @@ func (s *instrumentingService) RetrieveFile(path, file string) {
 		s.requestCount.With("method", "RetrieveFile").Add(1)
 		s.requestLatency.With("method", "RetrieveFile").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.RetrieveFile(path, file)
+	s.Service.RetrieveFile(path, file)
 }
