@@ -3,4 +3,4 @@ WORKDIR /app
 # Now just add the binary
 COPY GPPMonitor /app/
 ENTRYPOINT ["/app/GPPMonitor"]
-EXPOSE 8002
+EXPOSE 8000
