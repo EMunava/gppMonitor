@@ -19,13 +19,13 @@ type service struct {
 	alertService alert.Service
 }
 
-func NewService(alert alert.Service) Service {
-	return &service{alertService: alert}
+func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
+	return &service{alertService: alert, selenium: selenium}
 }
 
 func (s *service) ConfirmDateRollOver() {
-	s.selenium = gppSelenium.NewService(s.alertService)
-	defer s.selenium.Driver().Close()
+	s.selenium.NewClient()
+	defer s.selenium.Driver().Quit()
 
 	defer func() {
 		if err := recover(); err != nil {

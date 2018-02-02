@@ -22,7 +22,7 @@ func (s *loggingService) WaitForWaitFor() {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.WaitForWaitFor()
+	s.Service.WaitForWaitFor()
 }
 func (s *loggingService) LogIn() {
 	defer func(begin time.Time) {
@@ -31,7 +31,7 @@ func (s *loggingService) LogIn() {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.LogIn()
+	s.Service.LogIn()
 
 }
 func (s *loggingService) LogOut() {
@@ -41,7 +41,7 @@ func (s *loggingService) LogOut() {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.LogOut()
+	s.Service.LogOut()
 }
 
 // Override
@@ -54,7 +54,7 @@ func (s *loggingService) HandleSeleniumError(internal bool, err error) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.HandleSeleniumError(internal, err)
+	s.Service.HandleSeleniumError(internal, err)
 
 }
 func (s *loggingService) Driver() (driver selenium.WebDriver) {
@@ -65,7 +65,7 @@ func (s *loggingService) Driver() (driver selenium.WebDriver) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return s.Driver()
+	return s.Service.Driver()
 
 }
 func (s *loggingService) ClickByClassName(cn string) {
@@ -76,7 +76,7 @@ func (s *loggingService) ClickByClassName(cn string) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.ClickByClassName(cn)
+	s.Service.ClickByClassName(cn)
 
 }
 func (s *loggingService) ClickByXPath(xp string) {
@@ -87,7 +87,7 @@ func (s *loggingService) ClickByXPath(xp string) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.ClickByXPath(xp)
+	s.Service.ClickByXPath(xp)
 
 }
 func (s *loggingService) ClickByCSSSelector(cs string) {
@@ -98,7 +98,7 @@ func (s *loggingService) ClickByCSSSelector(cs string) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.ClickByCSSSelector(cs)
+	s.Service.ClickByCSSSelector(cs)
 
 }
 
@@ -111,6 +111,17 @@ func (s *loggingService) WaitFor(findBy, selector string) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.WaitFor(findBy, selector)
+	s.Service.WaitFor(findBy, selector)
 
+}
+
+func (s *loggingService) NewClient() (err error) {
+	defer func(begin time.Time) {
+		s.logger.Log(
+			"method", "NewClient",
+			"error", err,
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	return s.Service.NewClient()
 }

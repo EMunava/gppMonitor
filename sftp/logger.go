@@ -24,7 +24,7 @@ func (s *loggingService) GetFilesInPath(path string) (file []File, err error) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	return s.GetFilesInPath(path)
+	return s.Service.GetFilesInPath(path)
 }
 
 func (s *loggingService) RetrieveFile(path, file string) {
@@ -36,5 +36,5 @@ func (s *loggingService) RetrieveFile(path, file string) {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.RetrieveFile(path, file)
+	s.Service.RetrieveFile(path, file)
 }

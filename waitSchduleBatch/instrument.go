@@ -24,5 +24,5 @@ func (s *instrumentingService) ConfirmWaitSchedSubBatch() {
 		s.requestCount.With("method", "ConfirmWaitSchedSubBatch").Add(1)
 		s.requestLatency.With("method", "ConfirmWaitSchedSubBatch").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.ConfirmWaitSchedSubBatch()
+	s.Service.ConfirmWaitSchedSubBatch()
 }
