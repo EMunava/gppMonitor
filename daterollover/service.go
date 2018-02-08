@@ -8,6 +8,7 @@ import (
 	"github.com/zamedic/go2hal/alert"
 	"strings"
 	"time"
+	"log"
 )
 
 type Service interface {
@@ -23,6 +24,8 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alertService: alert, selenium: selenium}
 }
 
+var iteration = 1
+
 func (s *service) ConfirmDateRollOver() {
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Quit()
@@ -31,6 +34,7 @@ func (s *service) ConfirmDateRollOver() {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
+			s.retry()
 		}
 	}()
 
@@ -115,4 +119,15 @@ func dateConfirm(d1 string) int {
 		return 1
 	}
 	return 0
+}
+
+func (s *service)retry(){
+	iteration++
+	if iteration < 5 {
+		log.Println("Next attempt in 2 minutes")
+		time.Sleep(2*time.Minute)
+		s.ConfirmDateRollOver()
+	}
+	s.selenium.LogOut()
+	return
 }
