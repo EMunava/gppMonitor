@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
+	"log"
 	"strings"
 	"time"
-	"log"
 )
 
 type Service interface {
@@ -121,11 +121,11 @@ func dateConfirm(d1 string) int {
 	return 0
 }
 
-func (s *service)retry(){
+func (s *service) retry() {
 	iteration++
 	if iteration < 5 {
 		log.Println("Next attempt in 2 minutes")
-		time.Sleep(2*time.Minute)
+		time.Sleep(2 * time.Minute)
 		s.ConfirmDateRollOver()
 	}
 	s.selenium.LogOut()
