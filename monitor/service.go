@@ -33,7 +33,6 @@ func (s *service) schedule() {
 	sel.Every(1).Day().At("00:22").Do(s.dateroloverService.ConfirmDateRollOver)
 	sel.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
 
-
 	gocron.NextRun()
 
 	<-sel.Start()
