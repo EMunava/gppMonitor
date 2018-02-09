@@ -3,10 +3,14 @@ package eodLog
 import (
 	"bufio"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
+	"github.com/matryer/try"
 	"github.com/zamedic/go2hal/alert"
+	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 type Service interface {
@@ -25,7 +29,13 @@ func NewService(sftpService sftp.Service, alertService alert.Service) Service {
 	return &service{sftpService: sftpService, alertService: alertService}
 }
 
-func (s *service) RetrieveEDOLog() {
+func (s *service) RetrieveEDOLogMethod() (r error) {
+
+	defer func() {
+		if err := recover(); err != nil {
+			r = errors.New("Confirmation of successful EDO.log entry failed")
+		}
+	}()
 
 	s.sftpService.RetrieveFile("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest/", "EDO.log")
 
@@ -36,6 +46,8 @@ func (s *service) RetrieveEDOLog() {
 	s.alertService.SendAlert(response(lastLine, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
+
+	return nil
 }
 
 func lastLines() (string, string) {
@@ -88,4 +100,19 @@ func response(message, dateStamp string) string {
 		return "Last log entry and current date do not correlate"
 	}
 	return "Error extracting log timestamp or success/failure result. Please consult log EDO file directly"
+}
+
+func (s *service) RetrieveEDOLog() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.RetrieveEDOLogMethod()
+		if err != nil {
+			log.Println("next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 5, err //5 attempts
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
