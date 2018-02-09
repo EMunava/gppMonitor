@@ -3,6 +3,7 @@ package daterollover
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
@@ -24,17 +25,16 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alertService: alert, selenium: selenium}
 }
 
-var iteration = 1
-
-func (s *service) ConfirmDateRollOver() {
+func (s *service) ConfirmDateRollOverMethod() (r error) {
 	s.selenium.NewClient()
+
 	defer s.selenium.Driver().Quit()
 
 	defer func() {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
-			s.retry()
+			r = errors.New("Date confirmation failed")
 		}
 	}()
 
@@ -54,6 +54,8 @@ func (s *service) ConfirmDateRollOver() {
 		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA dates have failed to rollover to the next business day"))
 	}
 	s.selenium.LogOut()
+
+	return nil
 }
 
 func (s *service) navigateToDates() {
@@ -121,13 +123,17 @@ func dateConfirm(d1 string) int {
 	return 0
 }
 
-func (s *service) retry() {
-	iteration++
-	if iteration < 5 {
-		log.Println("Next attempt in 2 minutes")
-		time.Sleep(2 * time.Minute)
-		s.ConfirmDateRollOver()
+func (s *service) ConfirmDateRollOver() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.ConfirmDateRollOverMethod()
+		if err != nil {
+			log.Println("next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 5, err //5 attempts
+	})
+	if err != nil {
+		log.Fatalln(err)
 	}
-	s.selenium.LogOut()
-	return
 }
