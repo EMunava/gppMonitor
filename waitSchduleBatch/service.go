@@ -8,6 +8,8 @@ import (
 	"github.com/zamedic/go2hal/alert"
 	"strings"
 	"time"
+	"github.com/matryer/try"
+	"log"
 )
 
 type Service interface {
@@ -23,7 +25,7 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alert: alert, selenium: selenium}
 }
 
-func (s *service) ConfirmWaitSchedSubBatch() {
+func (s *service) ConfirmWaitSchedSubBatchMethod() (r error){
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Close()
 
@@ -31,6 +33,7 @@ func (s *service) ConfirmWaitSchedSubBatch() {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
+			r = errors.New("Wait Scheduled Sub Batch transaction amount retrieval failed")
 		}
 	}()
 
@@ -44,7 +47,11 @@ func (s *service) ConfirmWaitSchedSubBatch() {
 
 	s.selenium.HandleSeleniumError(false, fmt.Errorf("wait scheduled sub batch transactions: %v", subBatchAmount))
 
+	log.Println(subBatchAmount)
+
 	s.selenium.LogOut()
+
+	return nil
 }
 
 func (s *service) navigateToSubBatchDates() {
@@ -110,4 +117,19 @@ func dateConfirmSubBatch(d1 string) int {
 		return 1
 	}
 	return 0
+}
+
+func (s *service) ConfirmWaitSchedSubBatch() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.ConfirmWaitSchedSubBatchMethod()
+		if err != nil {
+			log.Println("next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 5, err //5 attempts
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
