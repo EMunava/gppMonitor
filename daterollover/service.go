@@ -10,6 +10,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"gopkg.in/kyokomi/emoji.v1"
 )
 
 type Service interface {
@@ -44,14 +45,16 @@ func (s *service) ConfirmDateRollOverMethod() (r error) {
 
 	Success := s.extractDates()
 
+	_, _, cd, td := date()
+
 	switch Success {
 
 	case 2:
-		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA date rollovers have completed successfully"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global and ZA dates have successfully rolled over to: %s", cd)))
 	case 1:
-		s.selenium.HandleSeleniumError(false, errors.New("Global date rollover has completed successfully"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global date has successfully roled over to: %s", td)))
 	case 0:
-		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA dates have failed to rollover to the next business day"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":rotating_light: Global and ZA dates have failed to roll over to : %s", cd)))
 	}
 	s.selenium.LogOut()
 
@@ -103,11 +106,7 @@ func (s *service) extractionLoop(date selenium.WebElement) int {
 
 func dateConfirm(d1 string) int {
 
-	currentDate := time.Now()
-	tomorrowDate := currentDate.AddDate(0, 0, 1)
-
-	cd := currentDate.Format("02/01/2006")
-	td := tomorrowDate.Format("02/01/2006")
+	currentDate, _, cd, td := date()
 
 	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 24, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 23, 0, 0, 0, currentDate.Location())) {
 		t := strings.Compare(d1, td)
@@ -136,4 +135,15 @@ func (s *service) ConfirmDateRollOver() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func date() (time.Time, time.Time, string, string){
+
+	currentDate := time.Now()
+	tomorrowDate := currentDate.AddDate(0, 0, 1)
+
+	cd := currentDate.Format("02/01/2006")
+	td := tomorrowDate.Format("02/01/2006")
+
+	return currentDate, tomorrowDate, cd, td
 }
