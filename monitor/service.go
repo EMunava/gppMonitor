@@ -5,6 +5,7 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
 	"github.com/jasonlvhit/gocron"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 )
 
 type Service interface {
@@ -16,7 +17,7 @@ type service struct {
 	scheduleBatch      waitSchduleBatch.Service
 }
 
-func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Service, scheduleBatch waitSchduleBatch.Service) Service {
+func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Service, scheduleBatch waitSchduleBatch.Service, postex postingException.Service) Service {
 	s := &service{dateroloverService: dateroloverService, eodLogService: eodLogService, scheduleBatch: scheduleBatch}
 	go func() {
 		s.schedule()

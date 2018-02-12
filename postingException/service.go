@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package postingException
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 )
 
 type Service interface {
-	ConfirmWaitSchedSubBatch()
+	ConfirmPostingException()
 }
 
 type service struct {
@@ -23,31 +23,7 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alert: alert, selenium: selenium}
 }
 
-func (s *service) ConfirmWaitSchedSubBatch() {
-	s.selenium.NewClient()
-	defer s.selenium.Driver().Close()
-
-	defer func() {
-		if err := recover(); err != nil {
-			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
-			s.selenium.LogOut()
-		}
-	}()
-
-	s.selenium.LogIn()
-
-	s.navigateToSubBatchDates()
-
-	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
-
-	subBatchAmount := s.extractDates()
-
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("'Wait Scheduled Sub Batch' transaction total: %v", subBatchAmount))
-
-	s.selenium.LogOut()
-}
-
-func (s *service) ConfirmPostingExecution() {
+func (s *service) ConfirmPostingException() {
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Close()
 
@@ -69,21 +45,6 @@ func (s *service) ConfirmPostingExecution() {
 	s.selenium.HandleSeleniumError(false, fmt.Errorf("'Posting Exception' amount: %v", postexAmount))
 
 	s.selenium.LogOut()
-}
-
-func (s *service) navigateToSubBatchDates() {
-
-	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
-
-	s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
-
-	s.selenium.WaitFor(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Individual Messages (')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Sched Sub Batch')]")
 }
 
 func (s *service) navigateToPostingExce() {
