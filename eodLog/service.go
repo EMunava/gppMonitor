@@ -3,6 +3,7 @@ package eodLog
 import (
 	"bufio"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
+	"github.com/kyokomi/emoji"
 	"github.com/zamedic/go2hal/alert"
 	"os"
 	"strings"
@@ -81,11 +82,11 @@ func response(message, dateStamp string) string {
 	cd := currentDate.Format("02/01/2006")
 
 	if strings.Contains(message, "successful") && cd == dateStamp {
-		return "EDO Posting request file successfully sent"
+		return emoji.Sprintf(":white_check_mark: EDO Posting request file successfully sent at:\n%s", dateStamp)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
-		return "EDO Posting request file send failed"
+		return emoji.Sprintf(":rotating_light: EDO Posting request file send failed at:\n%s", dateStamp)
 	} else if cd != dateStamp {
-		return "Last log entry and current date do not correlate"
+		return emoji.Sprintf(":rotating_light: Last log entry and current date do not correlate. Last log entry was at:\n%s", dateStamp)
 	}
-	return "Error extracting log timestamp or success/failure result. Please consult log EDO file directly"
+	return emoji.Sprintf(":red_circle: Error extracting log timestamp or success/failure result. Please consult EDO log file directly")
 }
