@@ -33,8 +33,9 @@ func (s *service) RetrieveEDOLog() {
 	dateLine, lastLine := lastLines()
 
 	dateStamp := dateConvert(dateLine)
+	fileName := fileNameExtract(lastLine)
 
-	s.alertService.SendAlert(response(lastLine, dateStamp))
+	s.alertService.SendAlert(response(lastLine, fileName, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
 }
@@ -76,17 +77,22 @@ func dateConvert(date string) string {
 	return dtstr2
 }
 
-func response(message, dateStamp string) string {
+func fileNameExtract(logEntry string) string {
+	fileName := logEntry[13:50]
+	return fileName
+}
+
+func response(message, filename, dateStamp string) string {
 
 	currentDate := time.Now()
 	cd := currentDate.Format("02/01/2006")
 
 	if strings.Contains(message, "successful") && cd == dateStamp {
-		return emoji.Sprintf(":white_check_mark: EDO Posting request file successfully sent at:\n%s", dateStamp)
+		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent at: %s", filename, dateStamp)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
-		return emoji.Sprintf(":rotating_light: EDO Posting request file send failed at:\n%s", dateStamp)
+		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed at: %s", filename, dateStamp)
 	} else if cd != dateStamp {
-		return emoji.Sprintf(":rotating_light: Last log entry and current date do not correlate. Last log entry was at:\n%s", dateStamp)
+		return emoji.Sprintf(":rotating_light: Sending of the EDO Posting request file has not commenced yet. Last file '%s' was sent at: %s", filename, dateStamp)
 	}
 	return emoji.Sprintf(":red_circle: Error extracting log timestamp or success/failure result. Please consult EDO log file directly")
 }
