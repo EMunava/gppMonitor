@@ -30,6 +30,7 @@ type service struct {
 
 func NewService(alert alert.Service) Service {
 	sel := halSelenium.NewChromeService(alert, seleniumServer())
+	alert.SendAlert("test 2")
 	return &service{sel}
 }
 
