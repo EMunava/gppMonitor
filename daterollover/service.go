@@ -9,6 +9,8 @@ import (
 	"github.com/zamedic/go2hal/alert"
 	"gopkg.in/kyokomi/emoji.v1"
 	"log"
+	"github.com/zamedic/go2hal/remoteTelegramCommands"
+	"golang.org/x/net/context"
 	"strings"
 	"time"
 )
@@ -20,10 +22,15 @@ type Service interface {
 type service struct {
 	selenium     gppSelenium.Service
 	alertService alert.Service
+	client       remoteTelegramCommands.RemoteCommandClient
 }
 
-func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
-	return &service{alertService: alert, selenium: selenium}
+func NewService(alert alert.Service, selenium gppSelenium.Service, client remoteTelegramCommands.RemoteCommandClient) Service {
+	s := &service{alertService: alert, selenium: selenium, client: client}
+	go func() {
+		s.registerRemoteStream()
+	}()
+	return s
 }
 
 func (s *service) ConfirmDateRollOverMethod() (r error) {
@@ -102,6 +109,31 @@ func (s *service) extractionLoop(date selenium.WebElement) int {
 		return success
 	}
 	return 0
+}
+
+func (s *service) registerRemoteStream() {
+	for {
+		request := remoteTelegramCommands.RemoteCommandRequest{Description: "Execute GPP Date Roll Over", Name: "GPPDateRolloverCheck"}
+		stream, err := s.client.RegisterCommand(context.Background(), &request)
+		if err != nil {
+			log.Println(err)
+		} else {
+			s.monitorForStreamResponse(stream)
+		}
+		time.Sleep(30 * time.Second)
+	}
+}
+
+func (s *service) monitorForStreamResponse(client remoteTelegramCommands.RemoteCommand_RegisterCommandClient) {
+	for {
+		in, err := client.Recv()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println(in.From)
+		s.ConfirmDateRollOver()
+	}
 }
 
 func dateConfirm(d1 string) int {

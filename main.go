@@ -14,6 +14,7 @@ import (
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/zamedic/go2hal/alert"
+	"github.com/zamedic/go2hal/remoteTelegramCommands"
 	"net/http"
 	"os"
 	"os/signal"
@@ -30,6 +31,9 @@ func main() {
 	fieldKeys := []string{"method"}
 
 	alertService := alert.NewKubernetesAlertProxy("")
+	alertService.SendAlert("test")
+
+	remoteTelegramService := remoteTelegramCommands.NewRemoteCommandClientService()
 
 	gppSeleniumService := gppSelenium.NewService(alertService)
 	gppSeleniumService = gppSelenium.NewLoggingService(log.With(logger, "component", "selenium"), gppSeleniumService)
@@ -46,7 +50,7 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), gppSeleniumService)
 
-	dateRolloverService := daterollover.NewService(alertService, gppSeleniumService)
+	dateRolloverService := daterollover.NewService(alertService, gppSeleniumService, remoteTelegramService)
 	dateRolloverService = daterollover.NewLoggingService(log.With(logger, "component", "date_rollover"), dateRolloverService)
 	dateRolloverService = daterollover.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
