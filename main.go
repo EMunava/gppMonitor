@@ -31,7 +31,6 @@ func main() {
 	fieldKeys := []string{"method"}
 
 	alertService := alert.NewKubernetesAlertProxy("")
-	alertService.SendAlert("test")
 
 	remoteTelegramService := remoteTelegramCommands.NewRemoteCommandClientService()
 
