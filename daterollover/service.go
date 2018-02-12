@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
+	"gopkg.in/kyokomi/emoji.v1"
 	"log"
 	"strings"
 	"time"
-	"gopkg.in/kyokomi/emoji.v1"
 )
 
 type Service interface {
@@ -137,7 +137,7 @@ func (s *service) ConfirmDateRollOver() {
 	}
 }
 
-func date() (time.Time, time.Time, string, string){
+func date() (time.Time, time.Time, string, string) {
 
 	currentDate := time.Now()
 	tomorrowDate := currentDate.AddDate(0, 0, 1)
