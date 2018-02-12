@@ -12,11 +12,11 @@ import (
 func MakeHandler(service Service, logger kitlog.Logger) http.Handler {
 	opts := gokit.GetServerOpts(logger)
 
-	daterollover := kithttp.NewServer(makeEodLogTestEndpoint(service), decodeTestEodFile, gokit.EncodeResponse, opts...)
+	eodfile := kithttp.NewServer(makeEodLogTestEndpoint(service), decodeTestEodFile, gokit.EncodeResponse, opts...)
 
 	r := mux.NewRouter()
 
-	r.Handle("/eodfile", daterollover).Methods("GET")
+	r.Handle("/eodfile", eodfile).Methods("GET")
 
 	return r
 

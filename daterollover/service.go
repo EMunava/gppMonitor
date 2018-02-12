@@ -3,12 +3,14 @@ package daterollover
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
+	"gopkg.in/kyokomi/emoji.v1"
+	"log"
 	"github.com/zamedic/go2hal/remoteTelegramCommands"
 	"golang.org/x/net/context"
-	"log"
 	"strings"
 	"time"
 )
@@ -31,14 +33,16 @@ func NewService(alert alert.Service, selenium gppSelenium.Service, client remote
 	return s
 }
 
-func (s *service) ConfirmDateRollOver() {
+func (s *service) ConfirmDateRollOverMethod() (r error) {
 	s.selenium.NewClient()
+
 	defer s.selenium.Driver().Quit()
 
 	defer func() {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
+			r = errors.New("Date confirmation failed")
 		}
 	}()
 
@@ -48,16 +52,20 @@ func (s *service) ConfirmDateRollOver() {
 
 	Success := s.extractDates()
 
+	_, _, cd, td := date()
+
 	switch Success {
 
 	case 2:
-		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA date rollovers have completed successfully"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global and ZA dates have successfully rolled over to: %s", cd)))
 	case 1:
-		s.selenium.HandleSeleniumError(false, errors.New("Global date rollover has completed successfully"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global date has successfully roled over to: %s", td)))
 	case 0:
-		s.selenium.HandleSeleniumError(false, errors.New("Global and ZA dates have failed to rollover to the next business day"))
+		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":rotating_light: Global and ZA dates have failed to roll over to : %s", cd)))
 	}
 	s.selenium.LogOut()
+
+	return nil
 }
 
 func (s *service) navigateToDates() {
@@ -130,11 +138,7 @@ func (s *service) monitorForStreamResponse(client remoteTelegramCommands.RemoteC
 
 func dateConfirm(d1 string) int {
 
-	currentDate := time.Now()
-	tomorrowDate := currentDate.AddDate(0, 0, 1)
-
-	cd := currentDate.Format("02/01/2006")
-	td := tomorrowDate.Format("02/01/2006")
+	currentDate, _, cd, td := date()
 
 	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 24, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 23, 0, 0, 0, currentDate.Location())) {
 		t := strings.Compare(d1, td)
@@ -148,4 +152,30 @@ func dateConfirm(d1 string) int {
 		return 1
 	}
 	return 0
+}
+
+func (s *service) ConfirmDateRollOver() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.ConfirmDateRollOverMethod()
+		if err != nil {
+			log.Println("next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 5, err //5 attempts
+	})
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func date() (time.Time, time.Time, string, string) {
+
+	currentDate := time.Now()
+	tomorrowDate := currentDate.AddDate(0, 0, 1)
+
+	cd := currentDate.Format("02/01/2006")
+	td := tomorrowDate.Format("02/01/2006")
+
+	return currentDate, tomorrowDate, cd, td
 }
