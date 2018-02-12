@@ -3,13 +3,13 @@ package waitSchduleBatch
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
+	"log"
 	"strings"
 	"time"
-	"github.com/matryer/try"
-	"log"
 )
 
 type Service interface {
@@ -25,7 +25,7 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alert: alert, selenium: selenium}
 }
 
-func (s *service) ConfirmWaitSchedSubBatchMethod() (r error){
+func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Close()
 
