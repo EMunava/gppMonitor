@@ -29,11 +29,10 @@ func (s *service) schedule() {
 
 	sel := gocron.NewScheduler()
 
-	sel.Every(1).Day().At("23:30").Do(s.dateroloverService.ConfirmDateRollOver)
-	sel.Every(1).Day().At("00:30").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
+	sel.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("00:22").Do(s.dateroloverService.ConfirmDateRollOver)
 	sel.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
-	sel.Every(1).Day().At("01:30").Do(s.dateroloverService.ConfirmDateRollOver)
-	sel.Every(1).Day().At("00:35").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
 
 	gocron.NextRun()
 
