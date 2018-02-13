@@ -48,34 +48,8 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 	s.selenium.HandleSeleniumError(false, fmt.Errorf("'Wait Scheduled Sub Batch' transaction total: %v", subBatchAmount))
 
 	s.selenium.LogOut()
-}
 
-func (s *service) ConfirmPostingExecution() {
-	s.selenium.NewClient()
-	defer s.selenium.Driver().Close()
-
-	defer func() {
-		if err := recover(); err != nil {
-			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
-			s.selenium.LogOut()
-		}
-	}()
-
-	s.selenium.LogIn()
-
-	s.navigateToPostingExce()
-
-	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
-
-	postexAmount := s.extractDates()
-
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("'Posting Exception' amount: %v", postexAmount))
-
-	log.Println(subBatchAmount)
-
-	s.selenium.LogOut()
-
-	return nil
+	return
 }
 
 func (s *service) navigateToSubBatchDates() {
@@ -91,21 +65,6 @@ func (s *service) navigateToSubBatchDates() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Sched Sub Batch')]")
-}
-
-func (s *service) navigateToPostingExce() {
-
-	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
-
-	s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
-
-	s.selenium.WaitFor(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Individual Messages (')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Exception')]")
-
-	s.selenium.ClickByXPath("//*[contains(text(), 'Posting Exception')]")
 }
 
 func (s *service) extractDates() int {
