@@ -27,7 +27,7 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 
 func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 	s.selenium.NewClient()
-	defer s.selenium.Driver().Close()
+	defer s.selenium.Driver().Quit()
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -49,13 +49,13 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Posting')]")
 
-	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
+	s.selenium.WaitFor(selenium.ByClassName, "ft-grid-click")
 
 	waitPostingAmount := s.extractBatchDates(false)
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in tracking(Posting): %v \nNew transactions to be processed(Scheduled Sub Batch): %v", waitPostingAmount, subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in tracking(Posting): %v New transactions to be processed(Scheduled Sub Batch): %v", waitPostingAmount, subBatchAmount))
 
-	log.Printf("Transactions in Tracking: %v \nNew Transactions: %v", waitPostingAmount, subBatchAmount)
+	log.Printf("Transactions in Tracking: %v\nNew Transactions: %v", waitPostingAmount, subBatchAmount)
 
 	s.selenium.LogOut()
 

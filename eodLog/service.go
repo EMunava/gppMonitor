@@ -104,7 +104,7 @@ func response(message, filename, dateStamp string) string {
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
 		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed at: %s", filename, dateStamp)
 	} else if cd != dateStamp {
-		return emoji.Sprintf(":rotating_light: Sending of the EDO Posting request file has not commenced yet. Last file '%s' was sent at: %s", filename, dateStamp)
+		panic("Retrying EDO.log retrieval")
 	}
 	return emoji.Sprintf(":red_circle: Error extracting log timestamp or success/failure result. Please consult EDO log file directly")
 }
