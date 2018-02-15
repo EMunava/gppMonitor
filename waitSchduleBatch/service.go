@@ -8,9 +8,9 @@ import (
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
 	"log"
-	"time"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type Service interface {
@@ -47,7 +47,7 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 		panic(err)
 	}
 
-	sb, err := s.selenium.Driver().FindElements(selenium.ByClassName, "//*[contains(text(), 'Wait Sched Sub Batch')]")
+	sb, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Wait Sched Sub Batch')]")
 	if err != nil {
 		panic(err)
 	}
@@ -78,17 +78,17 @@ func (s *service) navigateToBatchDates() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 }
 
-func (s *service)extractInteger(i string) int{
+func (s *service) extractInteger(i string) int {
 	re := regexp.MustCompile("[0-9]+")
 	ar := re.FindAllString(i, -1)
-	s2i,err := strconv.Atoi(ar[0])
-	if err != nil{
-		panic("Test")
+	s2i, err := strconv.Atoi(ar[0])
+	if err != nil {
+		s.selenium.HandleSeleniumError(true, err)
 	}
 	return s2i
 }
 
-func (s *service)extractString(date selenium.WebElement) string{
+func (s *service) extractString(date selenium.WebElement) string {
 	str, err := date.GetAttribute("innerText")
 	if err != nil {
 		s.selenium.HandleSeleniumError(true, err)
