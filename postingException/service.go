@@ -7,7 +7,6 @@ import (
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
 	"strings"
-	"time"
 )
 
 type Service interface {
@@ -38,7 +37,7 @@ func (s *service) ConfirmPostingException() {
 
 	s.navigateToPostingExce()
 
-	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
+	s.selenium.WaitFor(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div.dh-main-right-container.ng-scope > div > div > div > div > div > div.ft-top-grid-action > div.pull-left > div.top-grid-action-section-title > span")
 
 	postexAmount := s.extractDates()
 
@@ -79,34 +78,19 @@ func (s *service) extractDates() int {
 }
 
 func (s *service) extractionLoopSubBatch(date selenium.WebElement) int {
-	sp, dValue := s.extract(date)
+	sp := s.extract(date)
 
 	if len(sp) != 1 {
-		success := dateConfirmSubBatch(dValue)
-		return success
+		return 1
 	}
 	return 0
 }
 
-func (s *service) extract(date selenium.WebElement) ([]string, string) {
+func (s *service) extract(date selenium.WebElement) []string {
 	dValue, err := date.GetAttribute("innerText")
 	if err != nil {
 		s.selenium.HandleSeleniumError(true, err)
 	}
 	sp := strings.Split(dValue, "/")
-	return sp, dValue
-}
-
-func dateConfirmSubBatch(d1 string) int {
-
-	currentDate := time.Now()
-	tomorrowDate := currentDate.AddDate(0, 0, 1)
-
-	td := tomorrowDate.Format("02/01/2006")
-
-	t := strings.Compare(d1, td)
-	if t == 0 {
-		return 1
-	}
-	return 0
+	return sp
 }
