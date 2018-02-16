@@ -8,9 +8,7 @@ import (
 	"github.com/zamedic/go2hal/alert"
 )
 
-/*
-	Service interface exposes the ConfirmPostingException method
- */
+//Service interface exposes the ConfirmPostingException method
 type Service interface {
 	ConfirmPostingException()
 }
