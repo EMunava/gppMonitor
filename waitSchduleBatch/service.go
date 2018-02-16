@@ -8,7 +8,8 @@ import (
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
 	"log"
-	"strings"
+	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -41,19 +42,21 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 
 	s.navigateToBatchDates()
 
-	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Sched Sub Batch')]")
+	wp, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Wait Posting')]")
+	if err != nil {
+		panic(err)
+	}
 
-	s.selenium.WaitFor(selenium.ByClassName, "ui-grid-cell-contents")
+	sb, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Wait Sched Sub Batch')]")
+	if err != nil {
+		panic(err)
+	}
 
-	subBatchAmount := s.extractBatchDates(true)
+	waitPostingAmount := s.extractInteger(s.extractString(wp[0]))
 
-	s.selenium.ClickByXPath("//*[contains(text(), 'Wait Posting')]")
+	subBatchAmount := s.extractInteger(s.extractString(sb[0]))
 
-	s.selenium.WaitFor(selenium.ByClassName, "ft-grid-click")
-
-	waitPostingAmount := s.extractBatchDates(false)
-
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in tracking(Posting): %v New transactions to be processed(Scheduled Sub Batch): %v", waitPostingAmount, subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in tracking(Posting): %d New transactions to be processed(Scheduled Sub Batch): %d", waitPostingAmount, subBatchAmount))
 
 	log.Printf("Transactions in Tracking: %v\nNew Transactions: %v", waitPostingAmount, subBatchAmount)
 
@@ -75,56 +78,22 @@ func (s *service) navigateToBatchDates() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 }
 
-func (s *service) extractBatchDates(isFollowingDay bool) int {
-
-	Success := 0
-
-	dates, err := s.selenium.Driver().FindElements(selenium.ByClassName, "ui-grid-cell-contents")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, date := range dates {
-
-		Success += s.extractionLoopBatch(date, isFollowingDay)
-	}
-	return Success
-}
-
-func (s *service) extractionLoopBatch(date selenium.WebElement, isFollowingDay bool) int {
-	sp, dValue := s.extract(date)
-
-	if len(sp) != 1 {
-		success := dateConfirmSubBatch(dValue, isFollowingDay)
-		return success
-	}
-	return 0
-}
-
-func (s *service) extract(date selenium.WebElement) ([]string, string) {
-	dValue, err := date.GetAttribute("innerText")
+func (s *service) extractInteger(i string) int {
+	re := regexp.MustCompile("[0-9]+")
+	ar := re.FindAllString(i, -1)
+	s2i, err := strconv.Atoi(ar[0])
 	if err != nil {
 		s.selenium.HandleSeleniumError(true, err)
 	}
-	sp := strings.Split(dValue, "/")
-	return sp, dValue
+	return s2i
 }
 
-func dateConfirmSubBatch(d1 string, isFollowingDay bool) int {
-
-	currentDate := time.Now()
-	tomorrowDate := currentDate.AddDate(0, 0, 1)
-
-	td := tomorrowDate.Format("02/01/2006")
-
-	if isFollowingDay == true {
-		t := strings.Compare(d1, td)
-		if t == 0 {
-			return 1
-		}
-		return 0
+func (s *service) extractString(date selenium.WebElement) string {
+	str, err := date.GetAttribute("innerText")
+	if err != nil {
+		s.selenium.HandleSeleniumError(true, err)
 	}
-	return 1
+	return str
 }
 
 func (s *service) ConfirmWaitSchedSubBatch() {
