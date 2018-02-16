@@ -10,6 +10,7 @@ type loggingService struct {
 	Service
 }
 
+//NewLoggingService function creates an instance of the loggingService struct for local use
 func NewLoggingService(logger log.Logger, s Service) Service {
 	return &loggingService{logger, s}
 }

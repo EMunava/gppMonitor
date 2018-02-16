@@ -18,6 +18,7 @@ type service struct {
 	alert    alert.Service
 }
 
+//NewService function creates instances of required external service structs for local use
 func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 	return &service{alert: alert, selenium: selenium}
 }

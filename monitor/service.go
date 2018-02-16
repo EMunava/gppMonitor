@@ -18,6 +18,7 @@ type service struct {
 	postex             postingException.Service
 }
 
+//NewService function creates instances of required external service structs for local use
 func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Service, scheduleBatch waitSchduleBatch.Service, postex postingException.Service) Service {
 	s := &service{dateroloverService: dateroloverService, eodLogService: eodLogService, scheduleBatch: scheduleBatch, postex: postex}
 	go func() {
