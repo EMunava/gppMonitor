@@ -6,6 +6,7 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
 	"github.com/go-kit/kit/log"
@@ -19,7 +20,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 )
 
 func main() {

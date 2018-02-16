@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
-	"strings"
 )
 
 type Service interface {
@@ -24,6 +23,9 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 
 func (s *service) ConfirmPostingException() {
 	s.selenium.NewClient()
+
+	driver := s.selenium.Driver()
+
 	defer s.selenium.Driver().Close()
 
 	defer func() {
@@ -39,9 +41,11 @@ func (s *service) ConfirmPostingException() {
 
 	s.selenium.WaitFor(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div.dh-main-right-container.ng-scope > div > div > div > div > div > div.ft-top-grid-action > div.pull-left > div.top-grid-action-section-title > span")
 
-	postexAmount := s.extractDates()
-
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("'Posting Exception' amount: %v", postexAmount))
+	shot, err := driver.Screenshot()
+	if err != nil {
+		panic("Failed to take screenshot")
+	}
+	s.alert.SendImageToHeartbeatGroup(shot)
 
 	s.selenium.LogOut()
 }
@@ -59,38 +63,4 @@ func (s *service) navigateToPostingExce() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Exception')]")
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Posting Exception')]")
-}
-
-func (s *service) extractDates() int {
-
-	Success := 0
-
-	dates, err := s.selenium.Driver().FindElements(selenium.ByClassName, "ui-grid-cell-contents")
-	if err != nil {
-		panic(err)
-	}
-
-	for _, date := range dates {
-
-		Success += s.extractionLoopSubBatch(date)
-	}
-	return Success
-}
-
-func (s *service) extractionLoopSubBatch(date selenium.WebElement) int {
-	sp := s.extract(date)
-
-	if len(sp) != 1 {
-		return 1
-	}
-	return 0
-}
-
-func (s *service) extract(date selenium.WebElement) []string {
-	dValue, err := date.GetAttribute("innerText")
-	if err != nil {
-		s.selenium.HandleSeleniumError(true, err)
-	}
-	sp := strings.Split(dValue, "/")
-	return sp
 }
