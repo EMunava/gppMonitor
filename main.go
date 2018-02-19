@@ -6,6 +6,7 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
 	"github.com/go-kit/kit/log"
@@ -109,14 +110,30 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), waitScheduleBatchService)
 
-	_ = monitor.NewService(dateRolloverService, eodLogService, waitScheduleBatchService)
+	postingExceptionService := postingException.NewService(alertService, gppSeleniumService)
+	postingExceptionService = postingException.NewLoggingService(log.With(logger, "component", "wait_schedule_batch"), postingExceptionService)
+	postingExceptionService = postingException.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "api",
+		Subsystem: "posting_exception",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "api",
+			Subsystem: "posting_exception",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys), postingExceptionService)
+
+	_ = monitor.NewService(dateRolloverService, eodLogService, waitScheduleBatchService, postingExceptionService)
 
 	httpLogger := log.With(logger, "component", "http")
 
 	mux := http.NewServeMux()
 	mux.Handle("/daterollover", daterollover.MakeHandler(dateRolloverService, httpLogger))
 	mux.Handle("/eodfile", eodLog.MakeHandler(eodLogService, httpLogger))
-	mux.Handle("/waitchedulebatch", waitSchduleBatch.MakeHandler(waitScheduleBatchService, httpLogger))
+	mux.Handle("/waitschedulebatch", waitSchduleBatch.MakeHandler(waitScheduleBatchService, httpLogger))
+	mux.Handle("/postingException", postingException.MakeHandler(postingExceptionService, httpLogger))
 
 	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())
