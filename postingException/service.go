@@ -51,7 +51,7 @@ func (s *service) ConfirmPostingException() {
 
 	postEx := s.extractInteger(s.extractString(px[0]))
 
-	s.selenium.HandleSeleniumError(false, errors.New(fmt.Sprintf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006"))))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006")))
 
 	s.selenium.LogOut()
 }
