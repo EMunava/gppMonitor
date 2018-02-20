@@ -6,6 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
+	"regexp"
+	"strconv"
+	"time"
 )
 
 //Service interface exposes the ConfirmPostingException method
@@ -26,8 +29,6 @@ func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
 func (s *service) ConfirmPostingException() {
 	s.selenium.NewClient()
 
-	driver := s.selenium.Driver()
-
 	defer s.selenium.Driver().Close()
 
 	defer func() {
@@ -43,11 +44,14 @@ func (s *service) ConfirmPostingException() {
 
 	s.selenium.WaitFor(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div.dh-main-right-container.ng-scope > div > div > div > div > div > div.ft-top-grid-action > div.pull-left > div.top-grid-action-section-title > span")
 
-	shot, err := driver.Screenshot()
+	px, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Posting Exception')]")
 	if err != nil {
-		panic("Failed to take screenshot")
+		panic(err)
 	}
-	s.alert.SendImageToHeartbeatGroup(shot)
+
+	postEx := s.extractInteger(s.extractString(px[0]))
+
+	s.selenium.HandleSeleniumError(false, errors.New(fmt.Sprintf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006"))))
 
 	s.selenium.LogOut()
 }
@@ -65,4 +69,22 @@ func (s *service) navigateToPostingExce() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Exception')]")
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Posting Exception')]")
+}
+
+func (s *service) extractInteger(i string) int {
+	re := regexp.MustCompile("[0-9]+")
+	ar := re.FindAllString(i, -1)
+	s2i, err := strconv.Atoi(ar[0])
+	if err != nil {
+		s.selenium.HandleSeleniumError(true, err)
+	}
+	return s2i
+}
+
+func (s *service) extractString(date selenium.WebElement) string {
+	str, err := date.GetAttribute("innerText")
+	if err != nil {
+		s.selenium.HandleSeleniumError(true, err)
+	}
+	return str
 }
