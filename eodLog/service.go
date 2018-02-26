@@ -120,6 +120,6 @@ func (s *service) RetrieveEDOLog() {
 		return attempt < 5, err //5 attempts
 	})
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 }
