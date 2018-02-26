@@ -45,14 +45,13 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) {
 
 	if len(exclude) != 0 {
 		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains, exclude[0])
-		if e != nil {
-			panic(e)
-		}
+
 	} else {
 		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains)
-		if e != nil {
-			panic(e)
-		}
+	}
+
+	if e != nil {
+		panic(e)
 	}
 
 	s.sftpService.RetrieveFile(fPath, fName)
