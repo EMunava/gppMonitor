@@ -15,10 +15,10 @@ func NewLoggingService(logger log.Logger, s Service) Service {
 	return &loggingService{logger, s}
 }
 
-func (s *loggingService) WaitForWaitFor() {
+func (s *loggingService) ConfirmWaitPostingExceptions() {
 	defer func(begin time.Time) {
 		s.logger.Log(
-			"method", "ConfirmWaitSchedSubBatch",
+			"method", "ConfirmWaitPostingExceptions",
 			"took", time.Since(begin),
 		)
 	}(time.Now())
