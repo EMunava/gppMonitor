@@ -1,8 +1,8 @@
 package extractFooterTransactions
 
 import (
-	"time"
 	"github.com/go-kit/kit/log"
+	"time"
 )
 
 type loggingService struct {

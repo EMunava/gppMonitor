@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/daterollover"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
@@ -20,7 +21,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 )
 
 func main() {

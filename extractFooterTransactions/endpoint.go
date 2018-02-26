@@ -6,8 +6,8 @@ import (
 )
 
 type transactionSAP struct{}
-type transactionLEG struct {}
-type transactionLEGSAP struct {}
+type transactionLEG struct{}
+type transactionLEGSAP struct{}
 
 func makeSAPTransactionsEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
