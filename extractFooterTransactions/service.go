@@ -124,7 +124,7 @@ func fileStat(logFile string) fileInfo {
 	return fileI
 }
 
-func pathToMostRecentFile(dirPath, fileContains string) (string, string, error) {
+func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (string, string, error) {
 
 	fileList := []string{}
 	currentDate := time.Now().Format("02/01/2006")
@@ -135,8 +135,12 @@ func pathToMostRecentFile(dirPath, fileContains string) (string, string, error) 
 
 	for _, file := range fileList {
 		cont := strings.Contains(file, fileContains)
+		ex := false
 		fileI := fileStat(file)
-		if fileI.ModTime == currentDate && cont == true {
+		if len(exclude) != 0 {
+			ex = strings.Contains(file, exclude[0])
+		}
+		if fileI.ModTime == currentDate && cont == true && ex == false {
 			return dirPath, fileI.Name, nil
 		}
 	}
