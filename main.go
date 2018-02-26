@@ -20,6 +20,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 )
 
 func main() {
@@ -124,8 +125,22 @@ func main() {
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), postingExceptionService)
+	transactionService := extractFooterTransactions.NewService(sftpService, alertService)
+	transactionService = extractFooterTransactions.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
+	transactionService = extractFooterTransactions.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+		Namespace: "api",
+		Subsystem: "transaction_count",
+		Name:      "request_count",
+		Help:      "Number of requests received.",
+	}, fieldKeys),
+		kitprometheus.NewSummaryFrom(stdprometheus.SummaryOpts{
+			Namespace: "api",
+			Subsystem: "transaction_count",
+			Name:      "request_latency_microseconds",
+			Help:      "Total duration of requests in microseconds.",
+		}, fieldKeys), transactionService)
 
-	_ = monitor.NewService(dateRolloverService, eodLogService, waitScheduleBatchService, postingExceptionService)
+	_ = monitor.NewService(dateRolloverService, eodLogService, waitScheduleBatchService, postingExceptionService, transactionService)
 
 	httpLogger := log.With(logger, "component", "http")
 
@@ -134,6 +149,9 @@ func main() {
 	mux.Handle("/eodfile", eodLog.MakeHandler(eodLogService, httpLogger))
 	mux.Handle("/waitschedulebatch", waitSchduleBatch.MakeHandler(waitScheduleBatchService, httpLogger))
 	mux.Handle("/postingException", postingException.MakeHandler(postingExceptionService, httpLogger))
+	mux.Handle("/SAPTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGSAPTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
 
 	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())

@@ -36,6 +36,7 @@ func NewService(sftpService sftp.Service, alertService alert.Service) Service {
 
 func (s *service) RetrieveSAPTransactions() {
 	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.SAP")
+
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +49,7 @@ func (s *service) RetrieveSAPTransactions() {
 }
 
 func (s *service) RetrieveLEGTransactions() {
-	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.LEG", "SAP")
+	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.LEG")
 	if err != nil {
 		panic(err)
 	}
@@ -123,11 +124,10 @@ func fileStat(logFile string) fileInfo {
 	return fileI
 }
 
-func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (string, string, error) {
+func pathToMostRecentFile(dirPath, fileContains string) (string, string, error) {
 
 	fileList := []string{}
 	currentDate := time.Now().Format("02/01/2006")
-	excludeCont := false
 	filepath.Walk(dirPath, func(path string, f os.FileInfo, err error) error {
 		fileList = append(fileList, path)
 		return nil
@@ -135,9 +135,8 @@ func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (stri
 
 	for _, file := range fileList {
 		cont := strings.Contains(file, fileContains)
-		excludeCont = strings.Contains(file, exclude[0])
 		fileI := fileStat(file)
-		if fileI.ModTime == currentDate && cont == true && excludeCont != false {
+		if fileI.ModTime == currentDate && cont == true {
 			return dirPath, fileI.Name, nil
 		}
 	}

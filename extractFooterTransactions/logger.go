@@ -2,7 +2,7 @@ package extractFooterTransactions
 
 import (
 	"time"
-	"log"
+	"github.com/go-kit/kit/log"
 )
 
 type loggingService struct {
@@ -15,14 +15,32 @@ func NewLoggingService(logger log.Logger, s Service) Service {
 	return &loggingService{logger, s}
 }
 
-func (s *loggingService) WaitForWaitFor() {
+func (s *loggingService) RetreiveSAPTransactions() {
 	defer func(begin time.Time) {
 		s.logger.Log(
-			"method", "ConfirmWaitSchedSubBatch",
+			"method", "RetreiveSapTransactions",
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	s.Service.RetrieveSAPTransactions()
+}
+
+func (s *loggingService) RetreiveLEGTransactions() {
+	defer func(begin time.Time) {
+		s.logger.Log(
+			"method", "RetreiveLEGTransactions",
+			"took", time.Since(begin),
+		)
+	}(time.Now())
+	s.Service.RetrieveLEGTransactions()
+}
+
+func (s *loggingService) RetreiveLEGSAPTransactions() {
+	defer func(begin time.Time) {
+		s.logger.Log(
+			"method", "RetreiveLEGSAPTransactions",
 			"took", time.Since(begin),
 		)
 	}(time.Now())
 	s.Service.RetrieveLEGSAPTransactions()
-	s.Service.RetrieveLEGTransactions()
-	s.Service.RetrieveSAPTransactions()
 }
