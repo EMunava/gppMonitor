@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+//Service interface exposes the transaction retrieval methods
 type Service interface {
 	RetrieveSAPTransactions()
 	RetrieveLEGTransactions()
@@ -30,46 +31,48 @@ type fileInfo struct {
 	Size    int64
 }
 
+//NewService function creates instances of required external service structs for local use
 func NewService(sftpService sftp.Service, alertService alert.Service) Service {
 	return &service{sftpService: sftpService, alertService: alertService}
 }
 
-func (s *service) RetrieveSAPTransactions() {
-	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.SAP")
+func (s *service) retreiveTransactions(contains string, exclude ...string) {
 
-	if err != nil {
-		panic(err)
+	var (
+		fPath, fName string
+		e            error
+	)
+
+	if len(exclude) != 0 {
+		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains, exclude[0])
+		if e != nil {
+			panic(e)
+		}
+	} else {
+		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains)
+		if e != nil {
+			panic(e)
+		}
 	}
+
 	s.sftpService.RetrieveFile(fPath, fName)
 
 	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
 
 	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+}
+
+func (s *service) RetrieveSAPTransactions() {
+	s.retreiveTransactions("RESPONSE.SAP")
 
 }
 
 func (s *service) RetrieveLEGTransactions() {
-	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.LEG")
-	if err != nil {
-		panic(err)
-	}
-	s.sftpService.RetrieveFile(fPath, fName)
-
-	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
-
-	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+	s.retreiveTransactions("RESPONSE.LEG", "SAP")
 }
 
 func (s *service) RetrieveLEGSAPTransactions() {
-	fPath, fName, err := pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", "RESPONSE.LEG.SAP")
-	if err != nil {
-		panic(err)
-	}
-	s.sftpService.RetrieveFile(fPath, fName)
-
-	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
-
-	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+	s.retreiveTransactions("RESPONSE.LEG.SAP")
 }
 
 func openFile(targetFile string) *os.File {

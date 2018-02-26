@@ -9,6 +9,7 @@ import (
 	"net/http"
 )
 
+//MakeHandler creates a new Mux router to handle postingException REST requests
 func MakeHandler(service Service, logger kitlog.Logger) http.Handler {
 	opts := gokit.GetServerOpts(logger)
 

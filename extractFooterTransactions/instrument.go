@@ -11,6 +11,7 @@ type instrumentingService struct {
 	Service
 }
 
+//NewInstrumentService function creates an instance of the instrumentingService struct for local use
 func NewInstrumentService(counter metrics.Counter, latency metrics.Histogram, s Service) Service {
 	return &instrumentingService{
 		requestCount:   counter,
