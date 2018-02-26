@@ -3,10 +3,10 @@ package monitor
 import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/daterollover"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
+	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
 	"github.com/jasonlvhit/gocron"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 )
 
 type Service interface {
