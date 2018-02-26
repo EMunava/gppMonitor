@@ -165,7 +165,7 @@ func (s *service) ConfirmDateRollOver() {
 		return attempt < 5, err //5 attempts
 	})
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 }
 
