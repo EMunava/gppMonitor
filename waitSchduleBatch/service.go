@@ -34,6 +34,9 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
 			r = errors.New("Wait Scheduled Sub Batch transaction amount retrieval failed")
 		}
 	}()

@@ -10,7 +10,6 @@ import (
 	"os"
 	"strings"
 	"time"
-
 	"github.com/pkg/errors"
 )
 
@@ -34,7 +33,10 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			r = errors.New("Confirmation of successful EDO.log entry failed")
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
+			r = errors.New("EDO file confirmation failed")
 		}
 	}()
 

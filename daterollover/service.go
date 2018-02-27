@@ -42,7 +42,10 @@ func (s *service) ConfirmDateRollOverMethod() (r error) {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
-			r = errors.New("Date confirmation failed")
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
+			r = errors.New("Date rollover confirmation failed")
 		}
 	}()
 
