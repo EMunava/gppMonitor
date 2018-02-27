@@ -6,8 +6,9 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
-	"regexp"
-	"strconv"
+	"log"
+	"reflect"
+	"strings"
 	"time"
 )
 
@@ -17,8 +18,14 @@ type Service interface {
 }
 
 type service struct {
-	selenium gppSelenium.Service
-	alert    alert.Service
+	selenium       gppSelenium.Service
+	alert          alert.Service
+	previousPostEx postExInfo
+}
+
+type postExInfo struct {
+	MIDList []string
+	Amount  int
 }
 
 //NewService function creates instances of required external service structs for local use
@@ -38,20 +45,29 @@ func (s *service) ConfirmPostingException() {
 		}
 	}()
 
+	currentDate := time.Now()
+	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 8, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 6, 0, 0, 0, currentDate.Location())) {
+
+		s.previousPostEx.resetPrevious()
+	}
+
 	s.selenium.LogIn()
 
 	s.navigateToPostingExce()
 
 	s.selenium.WaitFor(selenium.ByCSSSelector, "#main-content > div.dh-main-container.ng-scope > div > div > div.dh-main-right-container.ng-scope > div > div > div > div > div > div.ft-top-grid-action > div.pull-left > div.top-grid-action-section-title > span")
 
-	px, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Posting Exception')]")
-	if err != nil {
-		panic(err)
+	postEx := s.extractPostEx()
+
+	postExCheck := reflect.DeepEqual(postEx, s.previousPostEx)
+
+	if !postExCheck {
+		s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx.Amount, time.Now().Format("02/01/2006")))
+
+		s.previousPostEx.setPrevious(&postEx)
+	} else {
+		log.Println("No changes")
 	}
-
-	postEx := s.extractInteger(s.extractString(px[0]))
-
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006")))
 
 	s.selenium.LogOut()
 }
@@ -71,20 +87,52 @@ func (s *service) navigateToPostingExce() {
 	s.selenium.ClickByXPath("//*[contains(text(), 'Posting Exception')]")
 }
 
-func (s *service) extractInteger(i string) int {
-	re := regexp.MustCompile("[0-9]+")
-	ar := re.FindAllString(i, -1)
-	s2i, err := strconv.Atoi(ar[0])
+func (s *service) extractPostEx() postExInfo {
+
+	postEx := postExInfo{}
+
+	mids, err := s.selenium.Driver().FindElements(selenium.ByClassName, "ui-grid-cell-contents")
 	if err != nil {
-		s.selenium.HandleSeleniumError(true, err)
+		panic(err)
 	}
-	return s2i
+
+	for _, mid := range mids {
+
+		sp, mv := s.extractionLoop(mid)
+		postEx.Amount += sp
+		if mv != "" {
+			postEx.MIDList = append(postEx.MIDList, mv)
+		}
+	}
+	return postEx
 }
 
-func (s *service) extractString(date selenium.WebElement) string {
-	str, err := date.GetAttribute("innerText")
+func (s *service) extractionLoop(mid selenium.WebElement) (int, string) {
+	sp, mv := s.extract(mid)
+
+	if sp {
+
+		success := 1
+		return success, mv
+	}
+	return 0, ""
+}
+
+func (s *service) extract(mid selenium.WebElement) (bool, string) {
+	mValue, err := mid.GetAttribute("innerText")
 	if err != nil {
 		s.selenium.HandleSeleniumError(true, err)
 	}
-	return str
+	sp := strings.Contains(mValue, "I0")
+	return sp, mValue
+}
+
+func (s *postExInfo) resetPrevious() {
+	s.Amount = 0
+	s.MIDList = s.MIDList[:0]
+}
+
+func (s *postExInfo) setPrevious(st *postExInfo) {
+	s.Amount = st.Amount
+	s.MIDList = st.MIDList
 }
