@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
-	"gopkg.in/kyokomi/emoji.v1"
-	"log"
 	"github.com/zamedic/go2hal/remoteTelegramCommands"
 	"golang.org/x/net/context"
+	"gopkg.in/kyokomi/emoji.v1"
+	"log"
 	"strings"
 	"time"
 )

@@ -5,12 +5,12 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
+	"github.com/pkg/errors"
 	"github.com/zamedic/go2hal/alert"
 	"log"
 	"os"
 	"strings"
 	"time"
-	"github.com/pkg/errors"
 )
 
 type Service interface {
