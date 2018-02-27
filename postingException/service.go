@@ -132,7 +132,7 @@ func (s *postExInfo) resetPrevious() {
 	s.MIDList = s.MIDList[:0]
 }
 
-func (st *postExInfo) setPrevious(s *postExInfo) {
-	st.Amount = s.Amount
-	st.MIDList = s.MIDList
+func (s *postExInfo) setPrevious(st *postExInfo) {
+	s.Amount = st.Amount
+	s.MIDList = st.MIDList
 }
