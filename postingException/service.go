@@ -8,7 +8,11 @@ import (
 	"github.com/zamedic/go2hal/alert"
 	"log"
 	"strings"
+	"time"
+	"reflect"
 )
+
+var previousPostEx *postExInfo
 
 //Service interface exposes the ConfirmPostingException method
 type Service interface {
@@ -43,6 +47,12 @@ func (s *service) ConfirmPostingException() {
 		}
 	}()
 
+	currentDate := time.Now()
+	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 8, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 6, 0, 0, 0, currentDate.Location())) {
+
+		&previousPostEx.MIDList = &previousPostEx.MIDList[:0]
+	}
+
 	s.selenium.LogIn()
 
 	s.navigateToPostingExce()
@@ -51,9 +61,14 @@ func (s *service) ConfirmPostingException() {
 
 	postEx := s.extractPostEx()
 
-	//s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006")))
-	log.Println(postEx.Amount)
+	postExCheck := reflect.DeepEqual(postEx, previousPostEx)
 
+	if !postExCheck {
+		//s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006")))
+		log.Println(postEx.Amount)
+
+		previousPostEx = &postEx
+	}
 	s.selenium.LogOut()
 }
 
@@ -110,4 +125,8 @@ func (s *service) extract(mid selenium.WebElement) (bool, string) {
 	}
 	sp := strings.Contains(mValue, "I0")
 	return sp, mValue
+}
+
+func resetPostEx(){
+
 }
