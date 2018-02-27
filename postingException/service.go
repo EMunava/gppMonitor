@@ -7,12 +7,10 @@ import (
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
 	"log"
+	"reflect"
 	"strings"
 	"time"
-	"reflect"
 )
-
-var previousPostEx *postExInfo
 
 //Service interface exposes the ConfirmPostingException method
 type Service interface {
@@ -20,9 +18,9 @@ type Service interface {
 }
 
 type service struct {
-	selenium gppSelenium.Service
-	alert    alert.Service
-	postExInfo
+	selenium       gppSelenium.Service
+	alert          alert.Service
+	previousPostEx postExInfo
 }
 
 type postExInfo struct {
@@ -50,7 +48,7 @@ func (s *service) ConfirmPostingException() {
 	currentDate := time.Now()
 	if currentDate.Before(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 8, 0, 0, 0, currentDate.Location())) && currentDate.After(time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 6, 0, 0, 0, currentDate.Location())) {
 
-		&previousPostEx.MIDList = &previousPostEx.MIDList[:0]
+		s.previousPostEx.resetPrevious()
 	}
 
 	s.selenium.LogIn()
@@ -61,14 +59,16 @@ func (s *service) ConfirmPostingException() {
 
 	postEx := s.extractPostEx()
 
-	postExCheck := reflect.DeepEqual(postEx, previousPostEx)
+	postExCheck := reflect.DeepEqual(postEx, s.previousPostEx)
 
 	if !postExCheck {
-		//s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx, time.Now().Format("02/01/2006")))
-		log.Println(postEx.Amount)
+		s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx.Amount, time.Now().Format("02/01/2006")))
 
-		previousPostEx = &postEx
+		s.previousPostEx.setPrevious(&postEx)
+	} else {
+		log.Println("No changes")
 	}
+
 	s.selenium.LogOut()
 }
 
@@ -127,6 +127,12 @@ func (s *service) extract(mid selenium.WebElement) (bool, string) {
 	return sp, mValue
 }
 
-func resetPostEx(){
+func (s *postExInfo) resetPrevious() {
+	s.Amount = 0
+	s.MIDList = s.MIDList[:0]
+}
 
+func (st *postExInfo) setPrevious(s *postExInfo) {
+	st.Amount = s.Amount
+	st.MIDList = s.MIDList
 }
