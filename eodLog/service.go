@@ -5,13 +5,12 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
+	"github.com/pkg/errors"
 	"github.com/zamedic/go2hal/alert"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type Service interface {
@@ -34,7 +33,10 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 
 	defer func() {
 		if err := recover(); err != nil {
-			r = errors.New("Confirmation of successful EDO.log entry failed")
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
+			r = errors.New("EDO file confirmation failed")
 		}
 	}()
 
