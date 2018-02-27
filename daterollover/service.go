@@ -7,10 +7,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
-	"gopkg.in/kyokomi/emoji.v1"
-	"log"
 	"github.com/zamedic/go2hal/remoteTelegramCommands"
 	"golang.org/x/net/context"
+	"gopkg.in/kyokomi/emoji.v1"
+	"log"
 	"strings"
 	"time"
 )
@@ -42,7 +42,10 @@ func (s *service) ConfirmDateRollOverMethod() (r error) {
 		if err := recover(); err != nil {
 			s.selenium.HandleSeleniumError(true, errors.New(fmt.Sprint(err)))
 			s.selenium.LogOut()
-			r = errors.New("Date confirmation failed")
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
+			r = errors.New("Date rollover confirmation failed")
 		}
 	}()
 
@@ -165,7 +168,7 @@ func (s *service) ConfirmDateRollOver() {
 		return attempt < 5, err //5 attempts
 	})
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 }
 
