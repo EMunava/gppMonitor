@@ -37,7 +37,9 @@ func (s *service) schedule() {
 	sel.Every(1).Hour().Do(s.postex.ConfirmPostingException)
 	sel.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
 	sel.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
-	sel.Every(1).Day().At("00:22").Do(s.dateroloverService.ConfirmDateRollOver)
+	sel.Every(1).Day().At("00:05").Do(s.transactionService.RetrieveSAPTransactions)
+	sel.Every(1).Day().At("01:05").Do(s.transactionService.RetrieveLEGSAPTransactions)
+	sel.Every(1).Day().At("01:32").Do(s.transactionService.RetrieveLEGTransactions)
 	sel.Every(1).Day().At("00:20").Do(s.transactionService.RetrieveLEGSAPTransactions)
 	sel.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
 
