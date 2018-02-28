@@ -47,7 +47,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
-			r = errors.New(fmt.Sprintf("%v file has not arrived", contains))
+			r = fmt.Errorf("%v file has not arrived", contains)
 		}
 	}()
 
@@ -77,24 +77,19 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 }
 
 func (s *service) RetrieveSAPTransactionsMethod() error {
-	if err := s.retreiveTransactions("RESPONSE.SAP"); err != nil {
-		return err
-	}
-	return nil
+	err := s.retreiveTransactions("RESPONSE.SAP")
+	return err
 }
 
 func (s *service) RetrieveLEGTransactionsMethod() error {
-	if err := s.retreiveTransactions("RESPONSE.LEG", "SAP"); err != nil {
-		return err
-	}
-	return nil
+	err := s.retreiveTransactions("RESPONSE.LEG", "SAP")
+	return err
+
 }
 
 func (s *service) RetrieveLEGSAPTransactionsMethod() error {
-	if err := s.retreiveTransactions("RESPONSE.LEG.SAP"); err != nil {
-		return err
-	}
-	return nil
+	err := s.retreiveTransactions("RESPONSE.LEG.SAP")
+	return err
 }
 
 func openFile(targetFile string) *os.File {
@@ -169,7 +164,7 @@ func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (stri
 			return dirPath, fileI.Name, nil
 		}
 	}
-	return "", "", errors.New(fmt.Sprintf("%v file has not arrived yet", fileContains))
+	return "", "", fmt.Errorf("%v file has not arrived yet", fileContains)
 }
 
 func (s *service) RetrieveSAPTransactions() {
