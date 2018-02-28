@@ -3,8 +3,11 @@ package extractFooterTransactions
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
+	"github.com/matryer/try"
 	"github.com/zamedic/go2hal/alert"
+	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -36,7 +39,17 @@ func NewService(sftpService sftp.Service, alertService alert.Service) Service {
 	return &service{sftpService: sftpService, alertService: alertService}
 }
 
-func (s *service) retreiveTransactions(contains string, exclude ...string) {
+func (s *service) retreiveTransactions(contains string, exclude ...string) (r error) {
+
+	defer func() {
+		if err := recover(); err != nil {
+
+			if e, ok := err.(error); ok {
+				r = errors.New(e.Error())
+			}
+			r = errors.New(fmt.Sprintf("%v file has not arrived", contains))
+		}
+	}()
 
 	var (
 		fPath, fName string
@@ -59,19 +72,29 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) {
 	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
 
 	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+
+	return nil
 }
 
-func (s *service) RetrieveSAPTransactions() {
-	s.retreiveTransactions("RESPONSE.SAP")
-
+func (s *service) RetrieveSAPTransactionsMethod() error {
+	if err := s.retreiveTransactions("RESPONSE.SAP"); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *service) RetrieveLEGTransactions() {
-	s.retreiveTransactions("RESPONSE.LEG", "SAP")
+func (s *service) RetrieveLEGTransactionsMethod() error {
+	if err := s.retreiveTransactions("RESPONSE.LEG", "SAP"); err != nil {
+		return err
+	}
+	return nil
 }
 
-func (s *service) RetrieveLEGSAPTransactions() {
-	s.retreiveTransactions("RESPONSE.LEG.SAP")
+func (s *service) RetrieveLEGSAPTransactionsMethod() error {
+	if err := s.retreiveTransactions("RESPONSE.LEG.SAP"); err != nil {
+		return err
+	}
+	return nil
 }
 
 func openFile(targetFile string) *os.File {
@@ -146,5 +169,48 @@ func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (stri
 			return dirPath, fileI.Name, nil
 		}
 	}
-	return "", "", errors.New("File has not arrived yet")
+	return "", "", errors.New(fmt.Sprintf("%v file has not arrived yet", fileContains))
+}
+
+func (s *service) RetrieveSAPTransactions() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.RetrieveSAPTransactionsMethod()
+		if err != nil {
+			log.Println("SAP file not detected. Next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 120, err //120 attempts. next 4 hours
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}
+func (s *service) RetrieveLEGTransactions() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.RetrieveLEGTransactionsMethod()
+		if err != nil {
+			log.Println("LEG file not detected. Next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 120, err //120 attempts. next 4 hours
+	})
+	if err != nil {
+		log.Println(err)
+	}
+}
+func (s *service) RetrieveLEGSAPTransactions() {
+	err := try.Do(func(attempt int) (bool, error) {
+		var err error
+		err = s.RetrieveLEGSAPTransactionsMethod()
+		if err != nil {
+			log.Println("LEG.SAP file not detected. Next attempt in 2 minutes")
+			time.Sleep(2 * time.Minute) // wait 2 minutes
+		}
+		return attempt < 120, err //120 attempts. next 4 hours
+	})
+	if err != nil {
+		log.Println(err)
+	}
 }
