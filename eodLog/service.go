@@ -40,7 +40,7 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 		}
 	}()
 
-	s.sftpService.RetrieveFile("/cdwasha/connectdirect/outgoing/EDO_DirectDebitRequest/", "EDO.log")
+	s.sftpService.RetrieveFile(getEDOLogLocation(), "EDO.log")
 
 	dateLine, lastLine := lastLines()
 
@@ -124,4 +124,8 @@ func (s *service) RetrieveEDOLog() {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func getEDOLogLocation() string {
+	return os.Getenv("EDO_LOCATION")
 }
