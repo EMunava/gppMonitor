@@ -31,19 +31,32 @@ func NewService(dateroloverService daterollover.Service, eodLogService eodLog.Se
 
 func (s *service) schedule() {
 
-	sel := gocron.NewScheduler()
+	postex := gocron.NewScheduler()
+	postexConst := gocron.NewScheduler()
+	confirmWaitSched := gocron.NewScheduler()
+	confirmDateRoll := gocron.NewScheduler()
+	retreiveSAP := gocron.NewScheduler()
+	retreiveLEG := gocron.NewScheduler()
+	retreiveLEGSAP := gocron.NewScheduler()
+	retreiveEDOLog := gocron.NewScheduler()
 
-	sel.Every(1).Day().At("08:00").Do(s.postex.ConfirmPostingException)
-	sel.Every(1).Hour().Do(s.postex.ConfirmPostingException)
-	sel.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
-	sel.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
-	sel.Every(1).Day().At("00:05").Do(s.transactionService.RetrieveSAPTransactions)
-	sel.Every(1).Day().At("01:05").Do(s.transactionService.RetrieveLEGSAPTransactions)
-	sel.Every(1).Day().At("01:32").Do(s.transactionService.RetrieveLEGTransactions)
-	sel.Every(1).Day().At("00:20").Do(s.transactionService.RetrieveLEGSAPTransactions)
-	sel.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
+	postex.Every(1).Day().At("08:00").Do(s.postex.ConfirmPostingException)
+	postexConst.Every(1).Hour().Do(s.postex.ConfirmPostingException)
+	confirmWaitSched.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
+	confirmDateRoll.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
+	retreiveSAP.Every(1).Day().At("00:05").Do(s.transactionService.RetrieveSAPTransactions)
+	retreiveLEG.Every(1).Day().At("01:32").Do(s.transactionService.RetrieveLEGTransactions)
+	retreiveLEGSAP.Every(1).Day().At("00:20").Do(s.transactionService.RetrieveLEGSAPTransactions)
+	retreiveEDOLog.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
 
 	gocron.NextRun()
 
-	<-sel.Start()
+	<-postex.Start()
+	<-postexConst.Start()
+	<-confirmWaitSched.Start()
+	<-confirmDateRoll.Start()
+	<-retreiveSAP.Start()
+	<-retreiveLEG.Start()
+	<-retreiveLEGSAP.Start()
+	<-retreiveEDOLog.Start()
 }
