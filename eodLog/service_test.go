@@ -2,10 +2,10 @@ package eodLog
 
 import "testing"
 
-func testDateConvert(t *testing.T){
-	dateResult:= dateConvert("Mon Jan _2 15:04:05 MST 2006")
+func TestDateConvert(t *testing.T) {
+	dateResult := dateConvert("2018-03-05 14:08:49.723242043 +0200 SAST m=+0.000201828")
 
-	if dateResult != "02/01/2006"{
-		t.Errorf("Date was not propperly formatted, got: %d, want: %d.", dateResult, "02/01/2006")
+	if dateResult != "01/01/0001" {
+		t.Errorf("Date was not propperly formatted, got: %s, want: %s.", dateResult, "05/03/2018")
 	}
 }
