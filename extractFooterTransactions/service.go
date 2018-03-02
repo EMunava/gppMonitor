@@ -37,7 +37,11 @@ type fileInfo struct {
 
 //NewService function creates instances of required external service structs for local use
 func NewService(sftpService sftp.Service, alertService alert.Service) Service {
-	return &service{sftpService: sftpService, alertService: alertService}
+	s := &service{sftpService: sftpService, alertService: alertService}
+	go func() {
+		s.schedule()
+	}()
+	return s
 }
 
 func (s *service) schedule() {
