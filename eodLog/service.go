@@ -3,6 +3,7 @@ package eodLog
 import (
 	"bufio"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
+	"github.com/jasonlvhit/gocron"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
@@ -26,7 +27,20 @@ type service struct {
 }
 
 func NewService(sftpService sftp.Service, alertService alert.Service) Service {
-	return &service{sftpService: sftpService, alertService: alertService}
+	s := &service{sftpService: sftpService, alertService: alertService}
+	go func() {
+		s.schedule()
+	}()
+	return s
+}
+
+func (s *service) schedule() {
+	retreiveEDOLog := gocron.NewScheduler()
+
+	go func() {
+		retreiveEDOLog.Every(1).Day().At("01:10").Do(s.RetrieveEDOLog)
+		<-retreiveEDOLog.Start()
+	}()
 }
 
 func (s *service) RetrieveEDOLogMethod() (r error) {

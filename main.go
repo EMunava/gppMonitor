@@ -6,7 +6,6 @@ import (
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/eodLog"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/extractFooterTransactions"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/monitor"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/postingException"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/waitSchduleBatch"
@@ -139,8 +138,6 @@ func main() {
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), transactionService)
-
-	_ = monitor.NewService(dateRolloverService, eodLogService, waitScheduleBatchService, postingExceptionService, transactionService)
 
 	httpLogger := log.With(logger, "component", "http")
 

@@ -3,6 +3,7 @@ package waitSchduleBatch
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
@@ -23,7 +24,20 @@ type service struct {
 }
 
 func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
-	return &service{alert: alert, selenium: selenium}
+	s := &service{alert: alert, selenium: selenium}
+	go func() {
+		s.schedule()
+	}()
+	return s
+}
+
+func (s *service) schedule() {
+	confirmWaitSched := gocron.NewScheduler()
+
+	go func() {
+		confirmWaitSched.Every(1).Day().At("19:00").Do(s.ConfirmWaitSchedSubBatch)
+		<-confirmWaitSched.Start()
+	}()
 }
 
 func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {

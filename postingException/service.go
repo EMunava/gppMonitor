@@ -3,6 +3,7 @@ package postingException
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/jasonlvhit/gocron"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/zamedic/go2hal/alert"
@@ -30,7 +31,26 @@ type postExInfo struct {
 
 //NewService function creates instances of required external service structs for local use
 func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
-	return &service{alert: alert, selenium: selenium}
+	s := &service{alert: alert, selenium: selenium}
+	go func() {
+		s.schedule()
+	}()
+	return s
+}
+
+func (s *service) schedule() {
+	postex := gocron.NewScheduler()
+	postexConst := gocron.NewScheduler()
+
+	go func() {
+		postex.Every(1).Day().At("08:00").Do(s.ConfirmPostingException)
+		<-postex.Start()
+	}()
+
+	go func() {
+		postexConst.Every(1).Hour().Do(s.ConfirmPostingException)
+		<-postexConst.Start()
+	}()
 }
 
 func (s *service) ConfirmPostingException() {
