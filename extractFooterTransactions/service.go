@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
+	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
 	"github.com/zamedic/go2hal/alert"
 	"log"
@@ -36,7 +37,30 @@ type fileInfo struct {
 
 //NewService function creates instances of required external service structs for local use
 func NewService(sftpService sftp.Service, alertService alert.Service) Service {
-	return &service{sftpService: sftpService, alertService: alertService}
+	s := &service{sftpService: sftpService, alertService: alertService}
+	go func() {
+		s.schedule()
+	}()
+	return s
+}
+
+func (s *service) schedule() {
+	retreiveSAP := gocron.NewScheduler()
+	retreiveLEG := gocron.NewScheduler()
+	retreiveLEGSAP := gocron.NewScheduler()
+
+	go func() {
+		retreiveSAP.Every(1).Day().At("00:05").Do(s.RetrieveSAPTransactions)
+		<-retreiveSAP.Start()
+	}()
+	go func() {
+		retreiveLEG.Every(1).Day().At("01:32").Do(s.RetrieveLEGTransactions)
+		<-retreiveLEG.Start()
+	}()
+	go func() {
+		retreiveLEGSAP.Every(1).Day().At("00:20").Do(s.RetrieveLEGSAPTransactions)
+		<-retreiveLEGSAP.Start()
+	}()
 }
 
 func (s *service) retreiveTransactions(contains string, exclude ...string) (r error) {

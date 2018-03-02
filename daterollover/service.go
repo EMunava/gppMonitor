@@ -3,6 +3,7 @@ package daterollover
 import (
 	"fmt"
 	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
+	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
@@ -30,7 +31,19 @@ func NewService(alert alert.Service, selenium gppSelenium.Service, client remote
 	go func() {
 		s.registerRemoteStream()
 	}()
+	go func() {
+		s.schedule()
+	}()
 	return s
+}
+
+func (s *service) schedule() {
+	confirmDateRoll := gocron.NewScheduler()
+
+	go func() {
+		confirmDateRoll.Every(1).Day().At("23:32").Do(s.ConfirmDateRollOver)
+		<-confirmDateRoll.Start()
+	}()
 }
 
 func (s *service) ConfirmDateRollOverMethod() (r error) {
