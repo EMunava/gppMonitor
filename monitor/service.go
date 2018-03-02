@@ -40,23 +40,43 @@ func (s *service) schedule() {
 	retreiveLEGSAP := gocron.NewScheduler()
 	retreiveEDOLog := gocron.NewScheduler()
 
-	postex.Every(1).Day().At("08:00").Do(s.postex.ConfirmPostingException)
-	postexConst.Every(1).Hour().Do(s.postex.ConfirmPostingException)
-	confirmWaitSched.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
-	confirmDateRoll.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
-	retreiveSAP.Every(1).Day().At("00:05").Do(s.transactionService.RetrieveSAPTransactions)
-	retreiveLEG.Every(1).Day().At("01:32").Do(s.transactionService.RetrieveLEGTransactions)
-	retreiveLEGSAP.Every(1).Day().At("00:20").Do(s.transactionService.RetrieveLEGSAPTransactions)
-	retreiveEDOLog.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
+	go func() {
+		postex.Every(1).Day().At("08:00").Do(s.postex.ConfirmPostingException)
+		<-postex.Start()
+	}()
+
+	go func() {
+		postexConst.Every(1).Hour().Do(s.postex.ConfirmPostingException)
+		<-postexConst.Start()
+	}()
+
+	go func() {
+		confirmWaitSched.Every(1).Day().At("19:00").Do(s.scheduleBatch.ConfirmWaitSchedSubBatch)
+		<-confirmWaitSched.Start()
+	}()
+
+	go func() {
+		confirmDateRoll.Every(1).Day().At("23:32").Do(s.dateroloverService.ConfirmDateRollOver)
+		<-confirmDateRoll.Start()
+	}()
+
+	go func() {
+		retreiveSAP.Every(1).Day().At("00:05").Do(s.transactionService.RetrieveSAPTransactions)
+		<-retreiveSAP.Start()
+	}()
+	go func() {
+		retreiveLEG.Every(1).Day().At("01:32").Do(s.transactionService.RetrieveLEGTransactions)
+		<-retreiveLEG.Start()
+	}()
+	go func() {
+		retreiveLEGSAP.Every(1).Day().At("00:20").Do(s.transactionService.RetrieveLEGSAPTransactions)
+		<-retreiveLEGSAP.Start()
+	}()
+	go func() {
+		retreiveEDOLog.Every(1).Day().At("01:10").Do(s.eodLogService.RetrieveEDOLog)
+		<-retreiveEDOLog.Start()
+	}()
 
 	gocron.NextRun()
 
-	<-postex.Start()
-	<-postexConst.Start()
-	<-confirmWaitSched.Start()
-	<-confirmDateRoll.Start()
-	<-retreiveSAP.Start()
-	<-retreiveLEG.Start()
-	<-retreiveLEGSAP.Start()
-	<-retreiveEDOLog.Start()
 }
