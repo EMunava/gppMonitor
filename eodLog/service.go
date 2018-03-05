@@ -54,8 +54,6 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 		}
 	}()
 
-	log.Printf("*%v*", getEDOLogLocation())
-
 	s.sftpService.RetrieveFile(getEDOLogLocation(), "EDO.log")
 
 	dateLine, lastLine := lastLines()
