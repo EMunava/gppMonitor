@@ -38,11 +38,17 @@ func NewService(alert alert.Service, selenium gppSelenium.Service, client remote
 }
 
 func (s *service) schedule() {
-	confirmDateRoll := gocron.NewScheduler()
+	confirmDateRoll01 := gocron.NewScheduler()
+	confirmDateRoll02 := gocron.NewScheduler()
 
 	go func() {
-		confirmDateRoll.Every(1).Day().At("23:32").Do(s.ConfirmDateRollOver)
-		<-confirmDateRoll.Start()
+		confirmDateRoll01.Every(1).Day().At("23:32").Do(s.ConfirmDateRollOver)
+		<-confirmDateRoll01.Start()
+	}()
+	go func() {
+
+		confirmDateRoll02.Every(1).Day().At("00:22").Do(s.ConfirmDateRollOver)
+		<-confirmDateRoll02.Start()
 	}()
 }
 
