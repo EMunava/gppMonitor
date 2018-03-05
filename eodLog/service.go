@@ -54,11 +54,17 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 		}
 	}()
 
+	log.Printf("*%v*", getEDOLogLocation())
+
 	s.sftpService.RetrieveFile(getEDOLogLocation(), "EDO.log")
 
 	dateLine, lastLine := lastLines()
-
+	dateLine = dateLine[18 : len(dateLine)-0]
 	dateStamp := dateConvert(dateLine)
+	if dateStamp == "01/01/0001" {
+		s.alertService.SendHeartbeatGroupAlert("EDO.log timestamp format has changed. Unable to parse date/time.")
+		log.Println("EDO.log timestamp format has changed. Unable to parse date/time.")
+	}
 	fileName := fileNameExtract(lastLine)
 
 	s.alertService.SendAlert(response(lastLine, fileName, dateStamp))
@@ -100,7 +106,7 @@ func openFile(targetFile string) *os.File {
 
 func dateConvert(date string) string {
 	dtstr1 := date
-	dt, _ := time.Parse("Mon Jan _2 15:04:05 MST 2006", dtstr1)
+	dt, _ := time.Parse("060102 030405", dtstr1)
 	dtstr2 := dt.Format("02/01/2006")
 	return dtstr2
 }
