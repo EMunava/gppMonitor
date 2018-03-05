@@ -19,7 +19,7 @@ func (s *loggingService) GetFilesInPath(path string) (file []File, err error) {
 		s.logger.Log(
 			"method", "GetFilesInPath",
 			"path", path,
-			"files", file,
+			"file", file,
 			"eror", err,
 			"took", time.Since(begin),
 		)
@@ -32,7 +32,7 @@ func (s *loggingService) RetrieveFile(path, file string) {
 		s.logger.Log(
 			"method", "RetrieveFile",
 			"path", path,
-			"files", file,
+			"file", file,
 			"took", time.Since(begin),
 		)
 	}(time.Now())
