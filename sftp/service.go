@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"crypto/x509"
+	"encoding/pem"
 )
 
 type Service interface {
@@ -35,10 +37,13 @@ type File struct {
 
 func (s *service) connect() (*sftp.Client, error) {
 
-	signer, err := ssh.ParsePrivateKey([]byte(privateKey()))
-	if err != nil {
+	der := decrypt([]byte(privateKey()), []byte(privatePass()))
+	key, err := x509.ParsePKCS1PrivateKey(der)
+	signer, err := ssh.NewSignerFromKey(key)
+	if err != nil{
 		log.Print(err)
 	}
+
 	clientConfig := &ssh.ClientConfig{
 		User: sshUser(),
 		Auth: []ssh.AuthMethod{
@@ -109,4 +114,20 @@ func privateKey() string {
 
 func sshEndpoint() string {
 	return os.Getenv("SSH_ENDPOINT")
+}
+
+func decrypt(key []byte, password []byte) []byte {
+	block, rest := pem.Decode(key)
+	if len(rest) > 0 {
+		log.Fatalf("Extra data included in key")
+	}
+	der, err := x509.DecryptPEMBlock(block, password)
+	if err != nil {
+		log.Fatalf("Decrypt failed: %v", err)
+	}
+	return der
+}
+
+func privatePass() string {
+	return os.Getenv("DEC_PASS")
 }
