@@ -112,6 +112,7 @@ func dateConvert(date string) string {
 
 func fileNameExtract(logEntry string) string {
 	fileName := logEntry[13:50]
+	fileName = strings.Replace(fileName,"_","-", -1)
 	return fileName
 }
 
