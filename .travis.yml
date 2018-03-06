@@ -5,7 +5,7 @@ go:
 env:
   global:
       - CGO_ENABLED=0
-      - CC_TEST_REPORTER_ID=1d8ecc28ac0c41cf1898b38182b5fab36da2206136a6dac5d40098d920518b82
+      - CC_TEST_REPORTER_ID=0a8bff2c6bef7c8d8c1631fb5083d1c314485085a62c61cc055d71559e23ba05
 
 addons:
   artifacts: true
