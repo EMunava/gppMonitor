@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
-	"github.com/zamedic/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"golang.org/x/net/context"
 	"log"
 	"os"
 	"path/filepath"
@@ -95,7 +96,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
 
-	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+	s.alertService.SendHeartbeatGroupAlert(context.TODO(), string(SAPTransAmount))
 
 	return nil
 }

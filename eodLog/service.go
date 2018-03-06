@@ -2,12 +2,13 @@ package eodLog
 
 import (
 	"bufio"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/jasonlvhit/gocron"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
-	"github.com/zamedic/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"golang.org/x/net/context"
 	"log"
 	"os"
 	"strings"
@@ -60,12 +61,12 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	dateLine = dateLine[18:]
 	dateStamp := dateConvert(dateLine)
 	if dateStamp == "01/01/0001" {
-		s.alertService.SendHeartbeatGroupAlert("EDO.log timestamp format has changed. Unable to parse date/time.")
+		s.alertService.SendHeartbeatGroupAlert(context.TODO(), "EDO.log timestamp format has changed. Unable to parse date/time.")
 		log.Println("EDO.log timestamp format has changed. Unable to parse date/time.")
 	}
 	fileName := fileNameExtract(lastLine)
 
-	s.alertService.SendAlert(response(lastLine, fileName, dateStamp))
+	s.alertService.SendAlert(context.TODO(), response(lastLine, fileName, dateStamp))
 
 	os.Remove("/tmp/EDO.log")
 
