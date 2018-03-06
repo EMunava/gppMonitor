@@ -11,7 +11,6 @@ import (
 	"golang.org/x/net/context"
 	"log"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -28,12 +27,6 @@ type Service interface {
 type service struct {
 	sftpService  sftp.Service
 	alertService alert.Service
-}
-
-type fileInfo struct {
-	Name    string
-	ModTime string
-	Size    int64
 }
 
 //NewService function creates instances of required external service structs for local use
@@ -82,10 +75,10 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 	)
 
 	if len(exclude) != 0 {
-		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains, exclude[0])
+		fPath, fName, e = s.pathToMostRecentFile(transactionFileLocation(), contains, exclude[0])
 
 	} else {
-		fPath, fName, e = pathToMostRecentFile("/cdwasha/connectdirect/incoming/EDO_DirectDebitRequest/", contains)
+		fPath, fName, e = s.pathToMostRecentFile(transactionFileLocation(), contains)
 	}
 
 	if e != nil {
@@ -94,9 +87,13 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	s.sftpService.RetrieveFile(fPath, fName)
 
-	SAPTransAmount := extractTransactionAmount(lastLines(fPath + fName))
+	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
 
 	s.alertService.SendHeartbeatGroupAlert(context.TODO(), string(SAPTransAmount))
+
+	log.Printf("%v transaction count: %v", contains, SAPTransAmount)
+
+	os.Remove("/tmp/" + fName)
 
 	return nil
 }
@@ -125,9 +122,9 @@ func openFile(targetFile string) *os.File {
 	return f
 }
 
-func lastLines(logFile string) string {
+func lastLines(logLocalLocation, logFile string) string {
 
-	f := openFile(logFile)
+	f := openFile(logLocalLocation + logFile)
 
 	buf := make([]string, 32*1024)
 	scanner := bufio.NewScanner(f)
@@ -146,7 +143,7 @@ func lastLines(logFile string) string {
 }
 
 func extractTransactionAmount(trans string) int {
-	trans = trans[32 : len(trans)-1]
+	trans = trans[32:]
 	re := regexp.MustCompile("[0-9]+")
 	ar := re.FindAllString(trans, -1)
 	transInt, err := strconv.Atoi(ar[0])
@@ -156,37 +153,24 @@ func extractTransactionAmount(trans string) int {
 	return transInt
 }
 
-func fileStat(logFile string) fileInfo {
-	info, err := os.Stat(logFile)
+func (s *service) pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (string, string, error) {
+
+	fileList, err := s.sftpService.GetFilesInPath(dirPath)
 	if err != nil {
-		panic("File not found")
-	}
-	fileI := fileInfo{
-		Name:    info.Name(),
-		ModTime: info.ModTime().Format("02/01/2006"),
-		Size:    info.Size(),
-	}
-	return fileI
-}
 
-func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (string, string, error) {
+	}
 
-	fileList := []string{}
 	currentDate := time.Now().Format("02/01/2006")
-	filepath.Walk(dirPath, func(path string, f os.FileInfo, err error) error {
-		fileList = append(fileList, path)
-		return nil
-	})
 
 	for _, file := range fileList {
-		cont := strings.Contains(file, fileContains)
+		cont := strings.Contains(file.Name, fileContains)
 		ex := false
-		fileI := fileStat(file)
 		if len(exclude) != 0 {
-			ex = strings.Contains(file, exclude[0])
+			ex = strings.Contains(file.Name, exclude[0])
 		}
-		if fileI.ModTime == currentDate && cont == true && ex == false {
-			return dirPath, fileI.Name, nil
+		daDate := file.LastModified.Format("02/01/2006")
+		if daDate == currentDate && cont == true && ex == false {
+			return dirPath, file.Name, nil
 		}
 	}
 	return "", "", fmt.Errorf("%v file has not arrived yet", fileContains)
@@ -194,13 +178,15 @@ func pathToMostRecentFile(dirPath, fileContains string, exclude ...string) (stri
 
 func (s *service) RetrieveSAPTransactions() {
 	err := try.Do(func(attempt int) (bool, error) {
+		try.MaxRetries = 120
 		var err error
 		err = s.RetrieveSAPTransactionsMethod()
 		if err != nil {
 			log.Println("SAP file not detected. Next attempt in 2 minutes")
 			time.Sleep(2 * time.Minute) // wait 2 minutes
 		}
-		return attempt < 120, err //120 attempts. next 4 hours
+
+		return true, err
 	})
 	if err != nil {
 		log.Println(err)
@@ -208,13 +194,14 @@ func (s *service) RetrieveSAPTransactions() {
 }
 func (s *service) RetrieveLEGTransactions() {
 	err := try.Do(func(attempt int) (bool, error) {
+		try.MaxRetries = 120
 		var err error
 		err = s.RetrieveLEGTransactionsMethod()
 		if err != nil {
 			log.Println("LEG file not detected. Next attempt in 2 minutes")
 			time.Sleep(2 * time.Minute) // wait 2 minutes
 		}
-		return attempt < 120, err //120 attempts. next 4 hours
+		return true, err
 	})
 	if err != nil {
 		log.Println(err)
@@ -222,15 +209,20 @@ func (s *service) RetrieveLEGTransactions() {
 }
 func (s *service) RetrieveLEGSAPTransactions() {
 	err := try.Do(func(attempt int) (bool, error) {
+		try.MaxRetries = 120
 		var err error
 		err = s.RetrieveLEGSAPTransactionsMethod()
 		if err != nil {
 			log.Println("LEG.SAP file not detected. Next attempt in 2 minutes")
 			time.Sleep(2 * time.Minute) // wait 2 minutes
 		}
-		return attempt < 120, err //120 attempts. next 4 hours
+		return true, err
 	})
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+func transactionFileLocation() string {
+	return os.Getenv("TRANSACTION_LOCATION")
 }

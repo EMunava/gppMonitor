@@ -7,3 +7,4 @@ Application used to monitor the Global PAYplus Service Platform.
 The application is a standard GO application.
 
 Full Documentation is available on the wiki <https://github.com/CardFrontendDevopsTeam/GPPMonitor/wiki>
+
