@@ -5,11 +5,11 @@ import (
 	"golang.org/x/crypto/ssh"
 	"log"
 
+	"crypto/x509"
+	"encoding/pem"
 	"os"
 	"strings"
 	"time"
-	"crypto/x509"
-	"encoding/pem"
 )
 
 type Service interface {
@@ -40,7 +40,7 @@ func (s *service) connect() (*sftp.Client, error) {
 	der := decrypt([]byte(privateKey()), []byte(privatePass()))
 	key, err := x509.ParsePKCS1PrivateKey(der)
 	signer, err := ssh.NewSignerFromKey(key)
-	if err != nil{
+	if err != nil {
 		log.Print(err)
 	}
 
