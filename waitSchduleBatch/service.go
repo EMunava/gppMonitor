@@ -2,12 +2,12 @@ package waitSchduleBatch
 
 import (
 	"fmt"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
-	"github.com/zamedic/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/gppMonitor/gppSelenium"
 	"log"
 	"regexp"
 	"strconv"

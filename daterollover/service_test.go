@@ -2,15 +2,15 @@ package daterollover
 
 import (
 	"fmt"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium/mock_gppSekenium"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
-	"github.com/zamedic/go2hal/alert"
-	gomock2 "github.com/zamedic/go2hal/gomock"
-	"github.com/zamedic/go2hal/halSelenium/mock_selenium"
-	"github.com/zamedic/go2hal/remoteTelegramCommands"
-	"github.com/zamedic/go2hal/remoteTelegramCommands/mock_remoteTelegramCommands"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/halSelenium/mock_selenium"
+	"github.com/weAutomateEverything/go2hal/halmock"
+	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands"
+	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands/mock_remoteTelegramCommands"
+	"github.com/weAutomateEverything/gppMonitor/gppSelenium/mock_gppSekenium"
 	"golang.org/x/net/context"
 	"testing"
 	"time"
@@ -42,7 +42,7 @@ func TestService_ConfirmDateRollOver(t *testing.T) {
 
 	currentDate := time.Now()
 	cd := currentDate.Format("02/01/2006")
-	mockGppSelenium.EXPECT().HandleSeleniumError(false, gomock2.ErrorMsgMatches(fmt.Errorf("🚨  Global and ZA dates have failed to roll over to : %v", cd)))
+	mockGppSelenium.EXPECT().HandleSeleniumError(false, halmock.ErrorMsgMatches(fmt.Errorf("🚨  Global and ZA dates have failed to roll over to : %v", cd)))
 
 	mockGppSelenium.EXPECT().LogOut()
 

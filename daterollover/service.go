@@ -2,13 +2,13 @@ package daterollover
 
 import (
 	"fmt"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/gppSelenium"
 	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
-	"github.com/zamedic/go2hal/alert"
-	"github.com/zamedic/go2hal/remoteTelegramCommands"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands"
+	"github.com/weAutomateEverything/gppMonitor/gppSelenium"
 	"golang.org/x/net/context"
 	"gopkg.in/kyokomi/emoji.v1"
 	"log"

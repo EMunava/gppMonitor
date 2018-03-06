@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"github.com/CardFrontendDevopsTeam/GPPMonitor/sftp"
 	"github.com/jasonlvhit/gocron"
 	"github.com/matryer/try"
-	"github.com/zamedic/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"golang.org/x/net/context"
 	"log"
 	"os"
 	"regexp"
@@ -88,7 +89,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
 
-	s.alertService.SendHeartbeatGroupAlert(string(SAPTransAmount))
+	s.alertService.SendHeartbeatGroupAlert(context.TODO(), string(SAPTransAmount))
 
 	log.Printf("%v transaction count: %v", contains, SAPTransAmount)
 
