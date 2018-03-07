@@ -89,9 +89,9 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
 
-	s.alertService.SendAlert(context.TODO(),fmt.Sprintf("%v transaction count for %v: %v",contains,time.Now().Format("02/01/2006"),string(SAPTransAmount)))
+	s.alertService.SendAlert(context.TODO(), fmt.Sprintf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), string(SAPTransAmount)))
 
-	log.Printf("%v transaction count for %v: %v",contains,time.Now().Format("02/01/2006"),string(SAPTransAmount))
+	log.Printf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), string(SAPTransAmount))
 
 	os.Remove("/tmp/" + fName)
 
