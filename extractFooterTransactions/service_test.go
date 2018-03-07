@@ -1,7 +1,12 @@
 package extractFooterTransactions
 
 import (
+	"github.com/golang/mock/gomock"
+	"github.com/weAutomateEverything/go2hal/alert"
 	"testing"
+
+	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"os"
 )
 
 func TestLastLines(t *testing.T) {
@@ -18,4 +23,22 @@ func TestExtractTransactionAmount(t *testing.T) {
 	if result != 5 {
 		t.Errorf("Transaction string was not successfully parsed to integer amount. Expected: %v, Extracted: %v", "5", result)
 	}
+}
+
+func TestRetrieveSAPTransactions(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+
+	mockAlert := alert.NewMockService(ctrl)
+	mockSFTP := sftp.NewMockService(ctrl)
+
+	os.Setenv("TRANSACTION_LOCATION", "testData/")
+
+	svc := NewService(mockSFTP, mockAlert)
+
+	mockSFTP.EXPECT().RetrieveFile("testData/", "RESPONSE.SAP")
+	mockSFTP.EXPECT().GetFilesInPath("testData/")
+
+	svc.retreiveTransactions("RESPONSE.SAP")
+
 }

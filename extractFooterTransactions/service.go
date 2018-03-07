@@ -22,6 +22,7 @@ type Service interface {
 	RetrieveSAPTransactions()
 	RetrieveLEGTransactions()
 	RetrieveLEGSAPTransactions()
+	retreiveTransactions(contains string, exclude ...string) error
 }
 
 type service struct {
@@ -190,6 +191,7 @@ func (s *service) RetrieveSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGTransactions() {
@@ -205,6 +207,7 @@ func (s *service) RetrieveLEGTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGSAPTransactions() {
@@ -220,6 +223,7 @@ func (s *service) RetrieveLEGSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 
