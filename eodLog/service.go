@@ -59,6 +59,9 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	s.sftpService.RetrieveFile(getEDOLogLocation(), "EDO.log")
 
 	dateLine, lastLine := lastLines()
+	if len(dateLine) < 30 {
+		panic(errors.Errorf(emoji.Sprintf(":rotating_light: Timestamp line within EDO.log is smaller than 30 characters which will result in and index out of bounds error.")))
+	}
 	year := dateLine[18:22]
 	month := dateLine[23:25]
 	day := dateLine[26:28]
@@ -66,8 +69,8 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	time := dateLine[29:]
 
 	date := day + month + year
-
 	dateStamp, timeStamp := dateTimeConvert(date, time)
+
 	if dateStamp == "01/01/0001" {
 		s.alertService.SendHeartbeatGroupAlert(context.TODO(), emoji.Sprintf(":rotating_light: EDO.log timestamp format has changed. Unable to parse date/time."))
 		log.Println("EDO.log timestamp format has changed. Unable to parse date/time.")
