@@ -66,7 +66,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
-			r = fmt.Errorf("%v file has not yet arrived from EDO at: %v", contains,time.Now().Format("3:04PM"))
+			r = fmt.Errorf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM"))
 		}
 	}()
 
