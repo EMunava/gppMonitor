@@ -2,6 +2,7 @@ package eodLog
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
@@ -58,15 +59,25 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	s.sftpService.RetrieveFile(getEDOLogLocation(), "EDO.log")
 
 	dateLine, lastLine := lastLines()
-	dateLine = dateLine[18:]
-	dateStamp := dateConvert(dateLine)
+	if len(dateLine) < 30 {
+		panic(errors.Errorf(emoji.Sprintf(":rotating_light: Timestamp line within EDO.log is smaller than 30 characters which will result in and index out of bounds error.")))
+	}
+	year := dateLine[18:22]
+	month := dateLine[23:25]
+	day := dateLine[26:28]
+
+	time := dateLine[29:]
+
+	date := day + month + year
+	dateStamp, timeStamp := dateTimeConvert(date, time)
+
 	if dateStamp == "01/01/0001" {
-		s.alertService.SendHeartbeatGroupAlert(context.TODO(), "EDO.log timestamp format has changed. Unable to parse date/time.")
+		s.alertService.SendHeartbeatGroupAlert(context.TODO(), emoji.Sprintf(":rotating_light: EDO.log timestamp format has changed. Unable to parse date/time."))
 		log.Println("EDO.log timestamp format has changed. Unable to parse date/time.")
 	}
 	fileName := fileNameExtract(lastLine)
 
-	s.alertService.SendAlert(context.TODO(), response(lastLine, fileName, dateStamp))
+	s.alertService.SendAlert(context.TODO(), response(lastLine, fileName, dateStamp, timeStamp))
 
 	os.Remove("/tmp/EDO.log")
 
@@ -103,32 +114,40 @@ func openFile(targetFile string) *os.File {
 	return f
 }
 
-func dateConvert(date string) string {
-	dtstr1 := date
-	dt, _ := time.Parse("060102 030405", dtstr1)
-	dtstr2 := dt.Format("02/01/2006")
-	return dtstr2
+func dateTimeConvert(date, logTime string) (string, string) {
+
+	d, e := time.Parse("02012006", date)
+	if e != nil {
+		panic(fmt.Errorf("EDO.log timestamp(date portion specifically) failed to parse with the following error: %v", e))
+	}
+	t, e := time.Parse("15:04:05", logTime)
+	if e != nil {
+		panic(fmt.Errorf("EDO.log timestamp(time portion specifically) failed  to parse with the following error: %v", e))
+	}
+	dFormat := d.Format("02/01/2006")
+	tFormat := t.Format("3:04PM")
+	return dFormat, tFormat
 }
 
 func fileNameExtract(logEntry string) string {
 	fileName := logEntry[13:50]
-	fileName = strings.Replace(fileName,"_","-", -1)
+	fileName = strings.Replace(fileName, "_", "-", -1)
 	return fileName
 }
 
-func response(message, filename, dateStamp string) string {
+func response(message, filename, dateStamp, timeStamp string) string {
 
 	currentDate := time.Now()
 	cd := currentDate.Format("02/01/2006")
 
 	if strings.Contains(message, "successful") && cd == dateStamp {
-		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent at: %s", filename, dateStamp)
+		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent on the: %s at %s", filename, dateStamp, timeStamp)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
-		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed at: %s", filename, dateStamp)
+		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp)
 	} else if cd != dateStamp {
 		panic("Retrying EDO.log retrieval")
 	}
-	return emoji.Sprintf(":red_circle: Error extracting log timestamp or success/failure result. Please consult EDO log file directly")
+	return emoji.Sprintf(":red_circle: Error extracting log timestamp or success/failure result on the: %s at %s. Please consult EDO log file directly", dateStamp, timeStamp)
 }
 
 func (s *service) RetrieveEDOLog() {
