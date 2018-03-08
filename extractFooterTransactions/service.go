@@ -22,6 +22,7 @@ type Service interface {
 	RetrieveSAPTransactions()
 	RetrieveLEGTransactions()
 	RetrieveLEGSAPTransactions()
+	retreiveTransactions(contains string, exclude ...string) error
 }
 
 type service struct {
@@ -65,7 +66,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
-			r = fmt.Errorf("%v file has not arrived", contains)
+			r = fmt.Errorf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM"))
 		}
 	}()
 
@@ -89,9 +90,9 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
 
-	s.alertService.SendHeartbeatGroupAlert(context.TODO(), string(SAPTransAmount))
+	s.alertService.SendAlert(context.TODO(), fmt.Sprintf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount)))
 
-	log.Printf("%v transaction count: %v", contains, SAPTransAmount)
+	log.Printf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount))
 
 	os.Remove("/tmp/" + fName)
 
@@ -190,6 +191,7 @@ func (s *service) RetrieveSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGTransactions() {
@@ -205,6 +207,7 @@ func (s *service) RetrieveLEGTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGSAPTransactions() {
@@ -220,6 +223,7 @@ func (s *service) RetrieveLEGSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
+		s.alertService.SendAlert(context.TODO(), err.Error())
 	}
 }
 
