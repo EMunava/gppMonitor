@@ -2,6 +2,7 @@ package eodLog
 
 import (
 	"bufio"
+	"fmt"
 	"github.com/jasonlvhit/gocron"
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
@@ -64,7 +65,7 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 
 	time := dateLine[29:]
 
-	date := day + "/" + month + "/" + year
+	date := day + month + year
 
 	dateStamp, timeStamp := dateTimeConvert(date, time)
 	if dateStamp == "01/01/0001" {
@@ -112,8 +113,14 @@ func openFile(targetFile string) *os.File {
 
 func dateTimeConvert(date, logTime string) (string, string) {
 
-	d, _ := time.Parse("2/01/2006", date)
-	t, _ := time.Parse("15:04:05", logTime)
+	d, e := time.Parse("02012006", date)
+	if e != nil {
+		panic(fmt.Errorf("EDO.log timestamp(date portion specifically) failed to parse with the following error: %v", e))
+	}
+	t, e := time.Parse("15:04:05", logTime)
+	if e != nil {
+		panic(fmt.Errorf("EDO.log timestamp(time portion specifically) failed  to parse with the following error: %v", e))
+	}
 	dFormat := d.Format("02/01/2006")
 	tFormat := t.Format("3:04PM")
 	return dFormat, tFormat
