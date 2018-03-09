@@ -8,7 +8,6 @@ import (
 	"github.com/weAutomateEverything/go2hal/alert"
 	"github.com/weAutomateEverything/gppMonitor/gppSelenium"
 	"log"
-	"reflect"
 	"strings"
 	"time"
 )
@@ -79,9 +78,9 @@ func (s *service) ConfirmPostingException() {
 
 	postEx := s.extractPostEx()
 
-	postExCheck := reflect.DeepEqual(postEx, s.previousPostEx)
+	postExCheck := s.compareCurrentAndPastPostex(postEx, s.previousPostEx)
 
-	if !postExCheck {
+	if !postExCheck && postEx.Amount != 0 {
 		s.selenium.HandleSeleniumError(false, fmt.Errorf("Posting Exception count: %d for %v", postEx.Amount, time.Now().Format("02/01/2006")))
 
 		s.previousPostEx.setPrevious(&postEx)
@@ -145,6 +144,24 @@ func (s *service) extract(mid selenium.WebElement) (bool, string) {
 	}
 	sp := strings.Contains(mValue, "I0")
 	return sp, mValue
+}
+
+func (s *service) compareCurrentAndPastPostex(currentPostex, pastPostex postExInfo) bool {
+	for _, mid := range currentPostex.MIDList {
+		if !contains(pastPostex.MIDList, mid) {
+			return false
+		}
+	}
+	return true
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *postExInfo) resetPrevious() {
