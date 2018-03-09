@@ -3,6 +3,7 @@ package waitSchduleBatch
 import (
 	"fmt"
 	"github.com/jasonlvhit/gocron"
+	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
@@ -73,7 +74,7 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 
 	subBatchAmount := s.extractInteger(s.extractString(sb[0]))
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in Wait Posting: %d\nTransactions in Scheduled Sub Batch: %d", waitPostingAmount, subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf(emoji.Sprintf(":white_check_mark: Transactions in Wait Posting: %d\nTransactions in Scheduled Sub Batch: %d", waitPostingAmount, subBatchAmount)))
 
 	log.Printf("Transactions in Wait Posting: %v\nTransactions in Scheduled Sub Batch: %v", waitPostingAmount, subBatchAmount)
 

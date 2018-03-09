@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jasonlvhit/gocron"
+	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/weAutomateEverything/go2hal/alert"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
@@ -90,7 +91,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
 
-	s.alertService.SendAlert(context.TODO(), fmt.Sprintf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount)))
+	s.alertService.SendAlert(context.TODO(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount)))
 
 	log.Printf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount))
 
