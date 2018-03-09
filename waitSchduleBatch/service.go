@@ -73,9 +73,9 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 
 	subBatchAmount := s.extractInteger(s.extractString(sb[0]))
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in tracking(Posting): %d New transactions to be processed(Scheduled Sub Batch): %d", waitPostingAmount, subBatchAmount))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf("Transactions in Wait Posting: %d\nTransactions in Scheduled Sub Batch: %d", waitPostingAmount, subBatchAmount))
 
-	log.Printf("Transactions in Tracking: %v\nNew Transactions: %v", waitPostingAmount, subBatchAmount)
+	log.Printf("Transactions in Wait Posting: %v\nTransactions in Scheduled Sub Batch: %v", waitPostingAmount, subBatchAmount)
 
 	s.selenium.LogOut()
 
