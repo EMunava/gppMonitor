@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jasonlvhit/gocron"
+	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/weAutomateEverything/go2hal/alert"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
@@ -28,6 +29,12 @@ type Service interface {
 type service struct {
 	sftpService  sftp.Service
 	alertService alert.Service
+}
+
+type transactionStatus struct {
+	rejected  int
+	tracking  int
+	processed int
 }
 
 //NewService function creates instances of required external service structs for local use
@@ -88,11 +95,13 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	s.sftpService.RetrieveFile(fPath, fName)
 
-	SAPTransAmount := extractTransactionAmount(lastLines("/tmp/", fName))
+	lineCount, transactionBreakDown := lastLines("/tmp/", fName)
 
-	s.alertService.SendAlert(context.TODO(), fmt.Sprintf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount)))
+	SAPTransAmount := extractTransactionAmount(lineCount)
 
-	log.Printf("%v transaction count for %v: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount))
+	s.alertService.SendAlert(context.TODO(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking))
+
+	log.Printf("%v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking)
 
 	os.Remove("/tmp/" + fName)
 
@@ -123,24 +132,37 @@ func openFile(targetFile string) *os.File {
 	return f
 }
 
-func lastLines(logLocalLocation, logFile string) string {
+func lastLines(logLocalLocation, logFile string) (string, transactionStatus) {
 
 	f := openFile(logLocalLocation + logFile)
 
 	buf := make([]string, 32*1024)
 	scanner := bufio.NewScanner(f)
+	ts := transactionStatus{}
 	for scanner.Scan() {
 		line := scanner.Text()
+		responseCode := line[67:69]
+
+		if responseCode == "00" {
+			ts.processed += 1
+		}
+
+		if responseCode == "02" {
+			ts.tracking += 1
+		}
+		if responseCode == "99" {
+			ts.rejected += 1
+		}
 		buf = append(buf, line)
 	}
 
 	if buf[len(buf)-1] == "" {
 		result := buf[len(buf)-2]
-		return result
+		return result, ts
 	}
 	result := buf[len(buf)-1]
 
-	return result
+	return result, ts
 }
 
 func extractTransactionAmount(trans string) int {
