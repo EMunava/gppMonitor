@@ -1,4 +1,4 @@
-package transactionCountIncoming
+package transactionCountLog
 
 import (
 	"bufio"

@@ -11,7 +11,7 @@ type waitBatchTest struct {
 func makeWaitBatchTestEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		_ = request.(waitBatchTest)
-		s.ConfirmWaitSchedSubBatch()
+		s.ExtractTransactionCount()
 		return nil, nil
 	}
 }

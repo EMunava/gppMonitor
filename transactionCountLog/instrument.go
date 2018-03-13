@@ -1,4 +1,4 @@
-package transactionCountIncoming
+package transactionCountLog
 
 import (
 	"github.com/go-kit/kit/metrics"

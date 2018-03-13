@@ -1,4 +1,4 @@
-package transactionCountIncoming
+package transactionCountLog
 
 import (
 	"github.com/golang/mock/gomock"

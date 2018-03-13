@@ -16,7 +16,7 @@ import (
 )
 
 type Service interface {
-	ConfirmWaitSchedSubBatch()
+	ExtractTransactionCount()
 }
 
 type service struct {
@@ -42,12 +42,12 @@ func (s *service) schedule() {
 	confirmWaitSched := gocron.NewScheduler()
 
 	go func() {
-		confirmWaitSched.Every(1).Day().At("19:00").Do(s.ConfirmWaitSchedSubBatch)
+		confirmWaitSched.Every(1).Day().At("19:00").Do(s.ExtractTransactionCount)
 		<-confirmWaitSched.Start()
 	}()
 }
 
-func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
+func (s *service) ExtractTransactionCountMethod() (r error) {
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Quit()
 
@@ -127,10 +127,10 @@ func (s *service) extractString(date selenium.WebElement) string {
 	return str
 }
 
-func (s *service) ConfirmWaitSchedSubBatch() {
+func (s *service) ExtractTransactionCount() {
 	err := try.Do(func(attempt int) (bool, error) {
 		var err error
-		err = s.ConfirmWaitSchedSubBatchMethod()
+		err = s.ExtractTransactionCountMethod()
 		if err != nil {
 			log.Println("next attempt in 2 minutes")
 			time.Sleep(2 * time.Minute) // wait 2 minutes

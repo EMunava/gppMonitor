@@ -15,7 +15,7 @@ import (
 	"github.com/weAutomateEverything/gppMonitor/postingException"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
 	"github.com/weAutomateEverything/gppMonitor/transactionCountGUI"
-	"github.com/weAutomateEverything/gppMonitor/transactionCountIncoming"
+	"github.com/weAutomateEverything/gppMonitor/transactionCountLog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -124,9 +124,9 @@ func main() {
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), postingExceptionService)
-	transactionService := transactionCountIncoming.NewService(sftpService, alertService)
-	transactionService = transactionCountIncoming.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
-	transactionService = transactionCountIncoming.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+	transactionService := transactionCountLog.NewService(sftpService, alertService)
+	transactionService = transactionCountLog.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
+	transactionService = transactionCountLog.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
 		Subsystem: "transaction_count",
 		Name:      "request_count",
@@ -146,9 +146,9 @@ func main() {
 	mux.Handle("/eodfile", eodLog.MakeHandler(eodLogService, httpLogger))
 	mux.Handle("/waitschedulebatch", transactionCountGUI.MakeHandler(waitScheduleBatchService, httpLogger))
 	mux.Handle("/postingException", postingException.MakeHandler(postingExceptionService, httpLogger))
-	mux.Handle("/SAPTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
-	mux.Handle("/LEGTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
-	mux.Handle("/LEGSAPTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/SAPTransactions", transactionCountLog.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGTransactions", transactionCountLog.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGSAPTransactions", transactionCountLog.MakeHandler(transactionService, httpLogger))
 
 	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())
