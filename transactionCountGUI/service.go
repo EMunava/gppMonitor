@@ -61,7 +61,7 @@ func (s *service) ExtractTransactionCountMethod() (r error) {
 			r = errors.New("Wait Scheduled Sub Batch transaction amount retrieval failed")
 		}
 	}()
-	
+
 	transactions := transactionCount{}
 
 	s.selenium.LogIn()
