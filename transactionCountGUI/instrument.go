@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package transactionCountGUI
 
 import (
 	"github.com/go-kit/kit/metrics"
@@ -24,5 +24,5 @@ func (s *instrumentingService) ConfirmWaitSchedSubBatch() {
 		s.requestCount.With("method", "ConfirmWaitSchedSubBatch").Add(1)
 		s.requestLatency.With("method", "ConfirmWaitSchedSubBatch").Observe(time.Since(begin).Seconds())
 	}(time.Now())
-	s.Service.ConfirmWaitSchedSubBatch()
+	s.Service.ExtractTransactionCount()
 }

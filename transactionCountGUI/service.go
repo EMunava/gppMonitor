@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package transactionCountGUI
 
 import (
 	"fmt"
@@ -16,12 +16,18 @@ import (
 )
 
 type Service interface {
-	ConfirmWaitSchedSubBatch()
+	ExtractTransactionCount()
 }
 
 type service struct {
 	selenium gppSelenium.Service
 	alert    alert.Service
+}
+
+type transactionCount struct {
+	waitSchedSubBatch int
+	waitPosting       int
+	scheduled         int
 }
 
 func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
@@ -36,12 +42,12 @@ func (s *service) schedule() {
 	confirmWaitSched := gocron.NewScheduler()
 
 	go func() {
-		confirmWaitSched.Every(1).Day().At("19:00").Do(s.ConfirmWaitSchedSubBatch)
+		confirmWaitSched.Every(1).Day().At("19:00").Do(s.ExtractTransactionCount)
 		<-confirmWaitSched.Start()
 	}()
 }
 
-func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
+func (s *service) ExtractTransactionCountMethod() (r error) {
 	s.selenium.NewClient()
 	defer s.selenium.Driver().Quit()
 
@@ -56,9 +62,17 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 		}
 	}()
 
+	transactions := transactionCount{}
+
 	s.selenium.LogIn()
 
-	s.navigateToBatchDates()
+	s.navigateToIndividualMessages()
+
+	wh, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Warehouse')]")
+
+	transactions.scheduled = s.extractInteger(s.extractString(wh[0]))
+
+	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 
 	wp, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Wait Posting')]")
 	if err != nil {
@@ -70,20 +84,20 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 		panic(err)
 	}
 
-	waitPostingAmount := s.extractInteger(s.extractString(wp[0]))
+	transactions.waitPosting = s.extractInteger(s.extractString(wp[0]))
 
-	subBatchAmount := s.extractInteger(s.extractString(sb[0]))
+	transactions.waitSchedSubBatch = s.extractInteger(s.extractString(sb[0]))
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf(emoji.Sprintf(":white_check_mark: Transactions in Wait Posting: %d\nTransactions in Scheduled Sub Batch: %d", waitPostingAmount, subBatchAmount)))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf(emoji.Sprintf(":white_check_mark: Transactions in Wait Posting: %v\nTransactions in Wait Scheduled Sub Batch: %v\nTransactions in Warehouse Scheduled: %v", transactions.waitPosting, transactions.waitSchedSubBatch, transactions.scheduled)))
 
-	log.Printf("Transactions in Wait Posting: %v\nTransactions in Scheduled Sub Batch: %v", waitPostingAmount, subBatchAmount)
+	log.Printf("Transactions in Wait Posting: %v\nTransactions in Wait Scheduled Sub Batch: %v\nTransactions in Warehouse Scheduled: %v", transactions.waitPosting, transactions.waitSchedSubBatch, transactions.scheduled)
 
 	s.selenium.LogOut()
 
 	return nil
 }
 
-func (s *service) navigateToBatchDates() {
+func (s *service) navigateToIndividualMessages() {
 
 	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
 
@@ -93,7 +107,6 @@ func (s *service) navigateToBatchDates() {
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Individual Messages (')]")
 
-	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 }
 
 func (s *service) extractInteger(i string) int {
@@ -114,10 +127,10 @@ func (s *service) extractString(date selenium.WebElement) string {
 	return str
 }
 
-func (s *service) ConfirmWaitSchedSubBatch() {
+func (s *service) ExtractTransactionCount() {
 	err := try.Do(func(attempt int) (bool, error) {
 		var err error
-		err = s.ConfirmWaitSchedSubBatchMethod()
+		err = s.ExtractTransactionCountMethod()
 		if err != nil {
 			log.Println("next attempt in 2 minutes")
 			time.Sleep(2 * time.Minute) // wait 2 minutes
