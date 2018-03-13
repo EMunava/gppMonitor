@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package transactionCountGUI
 
 import (
 	"github.com/go-kit/kit/log"
@@ -21,5 +21,5 @@ func (s *loggingService) WaitForWaitFor() {
 			"took", time.Since(begin),
 		)
 	}(time.Now())
-	s.Service.ConfirmWaitSchedSubBatch()
+	s.Service.ExtractTransactionCount()
 }

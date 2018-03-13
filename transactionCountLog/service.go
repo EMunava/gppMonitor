@@ -1,4 +1,4 @@
-package extractFooterTransactions
+package transactionCountLog
 
 import (
 	"bufio"
