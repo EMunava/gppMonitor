@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package transactionCountGUI
 
 import (
 	"context"

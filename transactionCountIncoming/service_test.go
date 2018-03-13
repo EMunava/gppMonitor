@@ -1,4 +1,4 @@
-package extractFooterTransactions
+package transactionCountIncoming
 
 import (
 	"github.com/golang/mock/gomock"

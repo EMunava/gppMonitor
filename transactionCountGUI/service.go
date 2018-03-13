@@ -1,4 +1,4 @@
-package waitSchduleBatch
+package transactionCountGUI
 
 import (
 	"fmt"
@@ -22,6 +22,12 @@ type Service interface {
 type service struct {
 	selenium gppSelenium.Service
 	alert    alert.Service
+}
+
+type transactionCount struct {
+	waitSchedSubBatch int
+	waitPosting       int
+	scheduled         int
 }
 
 func NewService(alert alert.Service, selenium gppSelenium.Service) Service {
@@ -55,10 +61,18 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 			r = errors.New("Wait Scheduled Sub Batch transaction amount retrieval failed")
 		}
 	}()
+	
+	transactions := transactionCount{}
 
 	s.selenium.LogIn()
 
-	s.navigateToBatchDates()
+	s.navigateToIndividualMessages()
+
+	wh, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Warehouse')]")
+
+	transactions.scheduled = s.extractInteger(s.extractString(wh[0]))
+
+	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 
 	wp, err := s.selenium.Driver().FindElements(selenium.ByXPATH, "//*[contains(text(), 'Wait Posting')]")
 	if err != nil {
@@ -70,20 +84,20 @@ func (s *service) ConfirmWaitSchedSubBatchMethod() (r error) {
 		panic(err)
 	}
 
-	waitPostingAmount := s.extractInteger(s.extractString(wp[0]))
+	transactions.waitPosting = s.extractInteger(s.extractString(wp[0]))
 
-	subBatchAmount := s.extractInteger(s.extractString(sb[0]))
+	transactions.waitSchedSubBatch = s.extractInteger(s.extractString(sb[0]))
 
-	s.selenium.HandleSeleniumError(false, fmt.Errorf(emoji.Sprintf(":white_check_mark: Transactions in Wait Posting: %d\nTransactions in Scheduled Sub Batch: %d", waitPostingAmount, subBatchAmount)))
+	s.selenium.HandleSeleniumError(false, fmt.Errorf(emoji.Sprintf(":white_check_mark: Transactions in Wait Posting: %v\nTransactions in Wait Scheduled Sub Batch: %v\nTransactions in Warehouse Scheduled: %v", transactions.waitPosting, transactions.waitSchedSubBatch, transactions.scheduled)))
 
-	log.Printf("Transactions in Wait Posting: %v\nTransactions in Scheduled Sub Batch: %v", waitPostingAmount, subBatchAmount)
+	log.Printf("Transactions in Wait Posting: %v\nTransactions in Wait Scheduled Sub Batch: %v\nTransactions in Warehouse Scheduled: %v", transactions.waitPosting, transactions.waitSchedSubBatch, transactions.scheduled)
 
 	s.selenium.LogOut()
 
 	return nil
 }
 
-func (s *service) navigateToBatchDates() {
+func (s *service) navigateToIndividualMessages() {
 
 	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
 
@@ -93,7 +107,6 @@ func (s *service) navigateToBatchDates() {
 
 	s.selenium.ClickByXPath("//*[contains(text(), 'Individual Messages (')]")
 
-	s.selenium.ClickByXPath("//*[contains(text(), 'Waiting')]")
 }
 
 func (s *service) extractInteger(i string) int {

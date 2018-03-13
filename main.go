@@ -11,11 +11,11 @@ import (
 	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands"
 	"github.com/weAutomateEverything/gppMonitor/daterollover"
 	"github.com/weAutomateEverything/gppMonitor/eodLog"
-	"github.com/weAutomateEverything/gppMonitor/extractFooterTransactions"
 	"github.com/weAutomateEverything/gppMonitor/gppSelenium"
 	"github.com/weAutomateEverything/gppMonitor/postingException"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
-	"github.com/weAutomateEverything/gppMonitor/waitSchduleBatch"
+	"github.com/weAutomateEverything/gppMonitor/transactionCountGUI"
+	"github.com/weAutomateEverything/gppMonitor/transactionCountIncoming"
 	"net/http"
 	"os"
 	"os/signal"
@@ -95,9 +95,9 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), eodLogService)
 
-	waitScheduleBatchService := waitSchduleBatch.NewService(alertService, gppSeleniumService)
-	waitScheduleBatchService = waitSchduleBatch.NewLoggingService(log.With(logger, "component", "wait_schedule_batch"), waitScheduleBatchService)
-	waitScheduleBatchService = waitSchduleBatch.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+	waitScheduleBatchService := transactionCountGUI.NewService(alertService, gppSeleniumService)
+	waitScheduleBatchService = transactionCountGUI.NewLoggingService(log.With(logger, "component", "wait_schedule_batch"), waitScheduleBatchService)
+	waitScheduleBatchService = transactionCountGUI.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
 		Subsystem: "wait_schedule_batch",
 		Name:      "request_count",
@@ -124,9 +124,9 @@ func main() {
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), postingExceptionService)
-	transactionService := extractFooterTransactions.NewService(sftpService, alertService)
-	transactionService = extractFooterTransactions.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
-	transactionService = extractFooterTransactions.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
+	transactionService := transactionCountIncoming.NewService(sftpService, alertService)
+	transactionService = transactionCountIncoming.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
+	transactionService = transactionCountIncoming.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
 		Subsystem: "transaction_count",
 		Name:      "request_count",
@@ -144,11 +144,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/daterollover", daterollover.MakeHandler(dateRolloverService, httpLogger))
 	mux.Handle("/eodfile", eodLog.MakeHandler(eodLogService, httpLogger))
-	mux.Handle("/waitschedulebatch", waitSchduleBatch.MakeHandler(waitScheduleBatchService, httpLogger))
+	mux.Handle("/waitschedulebatch", transactionCountGUI.MakeHandler(waitScheduleBatchService, httpLogger))
 	mux.Handle("/postingException", postingException.MakeHandler(postingExceptionService, httpLogger))
-	mux.Handle("/SAPTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
-	mux.Handle("/LEGTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
-	mux.Handle("/LEGSAPTransactions", extractFooterTransactions.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/SAPTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
+	mux.Handle("/LEGSAPTransactions", transactionCountIncoming.MakeHandler(transactionService, httpLogger))
 
 	http.Handle("/", accessControl(mux))
 	http.Handle("/metrics", promhttp.Handler())
