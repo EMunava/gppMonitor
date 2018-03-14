@@ -136,11 +136,16 @@ func lastLines(logLocalLocation, logFile string) (string, transactionStatus) {
 
 	f := openFile(logLocalLocation + logFile)
 
-	buf := make([]string, 32*1024)
+	var (
+		lastLine       string
+		secondLastLine string
+	)
+
 	scanner := bufio.NewScanner(f)
 	ts := transactionStatus{}
 	for scanner.Scan() {
 		line := scanner.Text()
+
 		responseCode := line[67:69]
 
 		if responseCode == "00" {
@@ -153,14 +158,16 @@ func lastLines(logLocalLocation, logFile string) (string, transactionStatus) {
 		if responseCode == "99" {
 			ts.rejected += 1
 		}
-		buf = append(buf, line)
+
+		secondLastLine = lastLine
+		lastLine = line
 	}
 
-	if buf[len(buf)-1] == "" {
-		result := buf[len(buf)-2]
+	if lastLine == "" {
+		result := secondLastLine
 		return result, ts
 	}
-	result := buf[len(buf)-1]
+	result := lastLine
 
 	return result, ts
 }
