@@ -8,6 +8,7 @@ import (
 	"github.com/kyokomi/emoji"
 	"github.com/matryer/try"
 	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
 	"golang.org/x/net/context"
 	"log"
@@ -27,8 +28,9 @@ type Service interface {
 }
 
 type service struct {
-	sftpService  sftp.Service
-	alertService alert.Service
+	sftpService    sftp.Service
+	alertService   alert.Service
+	calloutService callout.Service
 }
 
 type transactionStatus struct {
@@ -38,8 +40,8 @@ type transactionStatus struct {
 }
 
 //NewService function creates instances of required external service structs for local use
-func NewService(sftpService sftp.Service, alertService alert.Service) Service {
-	s := &service{sftpService: sftpService, alertService: alertService}
+func NewService(callout callout.Service, sftpService sftp.Service, alertService alert.Service) Service {
+	s := &service{calloutService: callout, sftpService: sftpService, alertService: alertService}
 	go func() {
 		s.schedule()
 	}()
@@ -73,6 +75,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
+			s.calloutService.InvokeCallout(context.TODO(), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")))
 			r = fmt.Errorf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM"))
 		}
 	}()

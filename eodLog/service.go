@@ -8,6 +8,7 @@ import (
 	"github.com/matryer/try"
 	"github.com/pkg/errors"
 	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
 	"golang.org/x/net/context"
 	"log"
@@ -21,15 +22,17 @@ type Service interface {
 		RetrieveEDOLog copies contents of EDO.log to a local file of the same name which is then analysed for the success/failure of Edo Posing request file send
 	*/
 	RetrieveEDOLog()
+	response(message, filename, dateStamp, timeStamp string) string
 }
 
 type service struct {
-	sftpService  sftp.Service
-	alertService alert.Service
+	sftpService    sftp.Service
+	alertService   alert.Service
+	calloutService callout.Service
 }
 
-func NewService(sftpService sftp.Service, alertService alert.Service) Service {
-	s := &service{sftpService: sftpService, alertService: alertService}
+func NewService(callout callout.Service, sftpService sftp.Service, alertService alert.Service) Service {
+	s := &service{calloutService: callout, sftpService: sftpService, alertService: alertService}
 	go func() {
 		s.schedule()
 	}()
@@ -77,7 +80,7 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	}
 	fileName := fileNameExtract(lastLine)
 
-	s.alertService.SendAlert(context.TODO(), response(lastLine, fileName, dateStamp, timeStamp))
+	s.alertService.SendAlert(context.TODO(), s.response(lastLine, fileName, dateStamp, timeStamp))
 
 	os.Remove("/tmp/EDO.log")
 
@@ -135,7 +138,7 @@ func fileNameExtract(logEntry string) string {
 	return fileName
 }
 
-func response(message, filename, dateStamp, timeStamp string) string {
+func (s *service) response(message, filename, dateStamp, timeStamp string) string {
 
 	currentDate := time.Now()
 	cd := currentDate.Format("02/01/2006")
@@ -143,6 +146,7 @@ func response(message, filename, dateStamp, timeStamp string) string {
 	if strings.Contains(message, "successful") && cd == dateStamp {
 		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent on the: %s at %s", filename, dateStamp, timeStamp)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
+		s.calloutService.InvokeCallout(context.TODO(), "EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp))
 		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp)
 	} else if cd != dateStamp {
 		panic("Retrying EDO.log retrieval")

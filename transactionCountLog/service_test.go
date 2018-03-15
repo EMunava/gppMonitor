@@ -1,12 +1,15 @@
 package transactionCountLog
 
 import (
+	"fmt"
 	"github.com/golang/mock/gomock"
 	"github.com/weAutomateEverything/go2hal/alert"
-	"testing"
-
+	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"golang.org/x/net/context"
 	"os"
+	"testing"
+	"time"
 )
 
 func TestLastLines(t *testing.T) {
@@ -31,13 +34,15 @@ func TestRetrieveSAPTransactions(t *testing.T) {
 
 	mockAlert := alert.NewMockService(ctrl)
 	mockSFTP := sftp.NewMockService(ctrl)
+	mockCallout := callout.NewMockService(ctrl)
 
 	os.Setenv("TRANSACTION_LOCATION", "testData/")
 
-	svc := NewService(mockSFTP, mockAlert)
+	svc := NewService(mockCallout, mockSFTP, mockAlert)
 
 	mockSFTP.EXPECT().RetrieveFile("testData/", "RESPONSE.SAP")
 	mockSFTP.EXPECT().GetFilesInPath("testData/")
+	mockCallout.EXPECT().InvokeCallout(context.TODO(), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", "RESPONSE.SAP", time.Now().Format("3:04PM")), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", "RESPONSE.SAP", time.Now().Format("3:04PM")))
 
 	svc.retreiveTransactions("RESPONSE.SAP")
 

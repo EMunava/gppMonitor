@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/tebeka/selenium"
 	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands"
 	"github.com/weAutomateEverything/gppMonitor/gppSelenium"
 	"golang.org/x/net/context"
@@ -21,13 +22,14 @@ type Service interface {
 }
 
 type service struct {
-	selenium     gppSelenium.Service
-	alertService alert.Service
-	client       remoteTelegramCommands.RemoteCommandClient
+	selenium       gppSelenium.Service
+	alertService   alert.Service
+	calloutService callout.Service
+	client         remoteTelegramCommands.RemoteCommandClient
 }
 
-func NewService(alert alert.Service, selenium gppSelenium.Service, client remoteTelegramCommands.RemoteCommandClient) Service {
-	s := &service{alertService: alert, selenium: selenium, client: client}
+func NewService(callout callout.Service, alert alert.Service, selenium gppSelenium.Service, client remoteTelegramCommands.RemoteCommandClient) Service {
+	s := &service{calloutService: callout, alertService: alert, selenium: selenium, client: client}
 	go func() {
 		s.registerRemoteStream()
 	}()
@@ -84,6 +86,7 @@ func (s *service) ConfirmDateRollOverMethod() (r error) {
 		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global date has successfully roled over to: %s", td)))
 	case 0:
 		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":rotating_light: Global and ZA dates have failed to roll over to : %s", cd)))
+		s.calloutService.InvokeCallout(context.TODO(), "GPP Global and ZA date rollover failure", fmt.Sprintf("Global and ZA dates have failed to roll over to : %s", cd))
 	}
 	s.selenium.LogOut()
 
