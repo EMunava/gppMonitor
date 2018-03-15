@@ -22,6 +22,7 @@ type Service interface {
 		RetrieveEDOLog copies contents of EDO.log to a local file of the same name which is then analysed for the success/failure of Edo Posing request file send
 	*/
 	RetrieveEDOLog()
+	response(message, filename, dateStamp, timeStamp string) string
 }
 
 type service struct {
