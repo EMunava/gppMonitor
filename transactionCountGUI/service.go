@@ -58,7 +58,7 @@ func (s *service) ExtractTransactionCountMethod() (r error) {
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
-			r = errors.New("Wait Scheduled Sub Batch transaction amount retrieval failed")
+			r = errors.New("Transaction amount retrieval via GPP GUI has failed")
 		}
 	}()
 

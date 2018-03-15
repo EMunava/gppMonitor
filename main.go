@@ -8,6 +8,7 @@ import (
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/weAutomateEverything/go2hal/alert"
+	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/go2hal/remoteTelegramCommands"
 	"github.com/weAutomateEverything/gppMonitor/daterollover"
 	"github.com/weAutomateEverything/gppMonitor/eodLog"
@@ -33,6 +34,8 @@ func main() {
 
 	alertService := alert.NewKubernetesAlertProxy("")
 
+	calloutService := callout.NewKubernetesCalloutProxy("")
+
 	remoteTelegramService := remoteTelegramCommands.NewRemoteCommandClientService()
 
 	gppSeleniumService := gppSelenium.NewService(alertService)
@@ -50,7 +53,7 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), gppSeleniumService)
 
-	dateRolloverService := daterollover.NewService(alertService, gppSeleniumService, remoteTelegramService)
+	dateRolloverService := daterollover.NewService(calloutService, alertService, gppSeleniumService, remoteTelegramService)
 	dateRolloverService = daterollover.NewLoggingService(log.With(logger, "component", "date_rollover"), dateRolloverService)
 	dateRolloverService = daterollover.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
@@ -80,7 +83,7 @@ func main() {
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), sftpService)
 
-	eodLogService := eodLog.NewService(sftpService, alertService)
+	eodLogService := eodLog.NewService(calloutService, sftpService, alertService)
 	eodLogService = eodLog.NewLoggingService(log.With(logger, "component", "eod_log"), eodLogService)
 	eodLogService = eodLog.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
@@ -124,7 +127,7 @@ func main() {
 			Name:      "request_latency_microseconds",
 			Help:      "Total duration of requests in microseconds.",
 		}, fieldKeys), postingExceptionService)
-	transactionService := transactionCountLog.NewService(sftpService, alertService)
+	transactionService := transactionCountLog.NewService(calloutService, sftpService, alertService)
 	transactionService = transactionCountLog.NewLoggingService(log.With(logger, "component", "Transaction Count"), transactionService)
 	transactionService = transactionCountLog.NewInstrumentService(kitprometheus.NewCounterFrom(stdprometheus.CounterOpts{
 		Namespace: "api",
