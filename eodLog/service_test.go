@@ -10,6 +10,8 @@ import (
 	"github.com/kyokomi/emoji"
 	"os"
 	"fmt"
+	"github.com/weAutomateEverything/gppMonitor/transactionCountLog"
+	"time"
 )
 
 func TestDateConvert(t *testing.T) {
@@ -28,14 +30,16 @@ func TestResponse(t *testing.T) {
 	mockAlert := alert.NewMockService(ctrl)
 	mockCallout := callout.NewMockService(ctrl)
 	mockSFTP := sftp.NewMockService(ctrl)
+	mockTrans := transactionCountLog.NewMockService(ctrl)
 
 	os.Setenv("EDO_LOCATION", "testData/")
 	
 	svc := NewService(mockCallout, mockSFTP, mockAlert)
 
-	mockCallout.EXPECT().InvokeCallout(context.TODO(), "EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", "EDO_POSTING_REQ_I03F05535IGU3V1C_.txt", "15/03/2018", "1:00PM"))
+	mockCallout.EXPECT().InvokeCallout(context.TODO(), "EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", "EDO_POSTING_REQ_I03F05535IGU3V1C_.txt", time.Now().Format("02/01/2006"), "1:00PM"))
 	mockAlert.EXPECT().SendHeartbeatGroupAlert(context.TODO(), emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed on the: %s at %s", "EDO_POSTING_REQ_I03F05535IGU3V1C_.txt", "15/03/2018", "1:00PM"))
 	mockSFTP.EXPECT().RetrieveFile("testData", "EDO.log")
+	mockTrans.EXPECT().RetrieveNightFileTransactions("EDO.log")
 	
-	svc.response("sending file EDO_POSTING_REQ_I03F05535IGU3V1C_.txt to EDO sending file EDO_POSTING_REQ_I03F05535IGU3V1C_.txt to EDO successful", "EDO_POSTING_REQ_I03F05535IGU3V1C_.txt", "15/03/2018", "1:00PM")
+	svc.response("sending file EDO_POSTING_REQ_I03F05535IGU3V1C_.txt to EDO sending file EDO_POSTING_REQ_I03F05535IGU3V1C_.txt to EDO failed", "EDO_POSTING_REQ_I03F05535IGU3V1C_.txt", time.Now().Format("02/01/2006"), "1:00PM")
 }

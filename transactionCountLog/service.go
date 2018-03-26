@@ -24,6 +24,7 @@ type Service interface {
 	RetrieveSAPTransactions()
 	RetrieveLEGTransactions()
 	RetrieveLEGSAPTransactions()
+	RetrieveNightFileTransactions(fileName string) int
 	retreiveTransactions(contains string, exclude ...string) error
 }
 
@@ -100,15 +101,22 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	lineCount, transactionBreakDown := lastLines("/tmp/", fName)
 
-	SAPTransAmount := extractTransactionAmount(lineCount)
+	TransAmount := extractTransactionAmount(lineCount)
 
-	s.alertService.SendAlert(context.TODO(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking))
+	s.alertService.SendAlert(context.TODO(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(TransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking))
 
-	log.Printf("%v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(SAPTransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking)
+	log.Printf("%v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(TransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking)
 
 	os.Remove("/tmp/" + fName)
 
 	return nil
+}
+
+func (s *service) RetrieveNightFileTransactions(fileName string) int {
+	s.sftpService.RetrieveFile(nightFileLocation(), fileName)
+	lineCount, _ := lastLines("/tmp/", fileName)
+	TransAmount := extractTransactionAmount(lineCount)
+	return TransAmount
 }
 
 func (s *service) RetrieveSAPTransactionsMethod() error {
@@ -261,4 +269,8 @@ func (s *service) RetrieveLEGSAPTransactions() {
 
 func transactionFileLocation() string {
 	return os.Getenv("TRANSACTION_LOCATION")
+}
+
+func nightFileLocation() string {
+	return os.Getenv("NIGHTFILE_LOCATION")
 }
