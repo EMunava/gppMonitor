@@ -10,6 +10,7 @@ import (
 	"github.com/weAutomateEverything/go2hal/alert"
 	"github.com/weAutomateEverything/go2hal/callout"
 	"github.com/weAutomateEverything/gppMonitor/sftp"
+	"github.com/weAutomateEverything/gppMonitor/transactionCountLog"
 	"golang.org/x/net/context"
 	"log"
 	"os"
@@ -26,9 +27,10 @@ type Service interface {
 }
 
 type service struct {
-	sftpService    sftp.Service
-	alertService   alert.Service
-	calloutService callout.Service
+	sftpService        sftp.Service
+	alertService       alert.Service
+	calloutService     callout.Service
+	transactionService transactionCountLog.Service
 }
 
 func NewService(callout callout.Service, sftpService sftp.Service, alertService alert.Service) Service {
@@ -144,7 +146,8 @@ func (s *service) response(message, filename, dateStamp, timeStamp string) strin
 	cd := currentDate.Format("02/01/2006")
 
 	if strings.Contains(message, "successful") && cd == dateStamp {
-		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent on the: %s at %s", filename, dateStamp, timeStamp)
+		transactionsToBeProcessed := s.transactionService.RetrieveNightFileTransactions(filename)
+		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent on the: %s at %s\n----------\nTransactions: ", filename, dateStamp, timeStamp, transactionsToBeProcessed)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
 		s.calloutService.InvokeCallout(context.TODO(), "EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp))
 		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp)
