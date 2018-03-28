@@ -76,7 +76,8 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 			if e, ok := err.(error); ok {
 				r = errors.New(e.Error())
 			}
-			s.calloutService.InvokeCallout(context.TODO(), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")))
+			//s.calloutService.InvokeCallout(context.TODO(), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")), fmt.Sprintf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM")))
+			log.Println("Test: Callout would now initiate")
 			r = fmt.Errorf("%v file has not yet arrived from EDO at: %v", contains, time.Now().Format("3:04PM"))
 		}
 	}()
