@@ -5,6 +5,7 @@ import (
 	"github.com/weAutomateEverything/go2hal/alert"
 	"github.com/weAutomateEverything/go2hal/halSelenium"
 	"os"
+	"github.com/weAutomateEverything/gppMonitor/hal"
 )
 
 type Service interface {
@@ -42,7 +43,7 @@ func (s *service) NewClient() error {
 	return nil
 }
 func (s *service) HandleSeleniumError(internal bool, err error) {
-	s.halSelenium.HandleSeleniumError(internal, err)
+	s.halSelenium.HandleSeleniumError(hal.Chatid(),internal, err)
 }
 
 func (s *service) Driver() selenium.WebDriver {

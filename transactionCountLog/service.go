@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/weAutomateEverything/gppMonitor/hal"
 )
 
 //Service interface exposes the transaction retrieval methods
@@ -104,7 +105,7 @@ func (s *service) retreiveTransactions(contains string, exclude ...string) (r er
 
 	TransAmount := extractTransactionAmount(lineCount)
 
-	s.alertService.SendAlert(context.TODO(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(TransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking))
+	s.alertService.SendAlert(context.TODO(),hal.Chatid(), emoji.Sprintf(":white_check_mark: %v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(TransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking))
 
 	log.Printf("%v transaction count for %v: %v\nSuccessful: %v\nRejected: %v\nTracking: %v", contains, time.Now().Format("02/01/2006"), strconv.Itoa(TransAmount), transactionBreakDown.processed, transactionBreakDown.rejected, transactionBreakDown.tracking)
 
@@ -232,7 +233,7 @@ func (s *service) RetrieveSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
-		s.alertService.SendAlert(context.TODO(), err.Error())
+		s.alertService.SendAlert(context.TODO(),hal.Chatid(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGTransactions() {
@@ -248,7 +249,7 @@ func (s *service) RetrieveLEGTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
-		s.alertService.SendAlert(context.TODO(), err.Error())
+		s.alertService.SendAlert(context.TODO(),hal.Chatid(), err.Error())
 	}
 }
 func (s *service) RetrieveLEGSAPTransactions() {
@@ -264,7 +265,7 @@ func (s *service) RetrieveLEGSAPTransactions() {
 	})
 	if err != nil {
 		log.Println(err)
-		s.alertService.SendAlert(context.TODO(), err.Error())
+		s.alertService.SendAlert(context.TODO(), hal.Chatid(),err.Error())
 	}
 }
 

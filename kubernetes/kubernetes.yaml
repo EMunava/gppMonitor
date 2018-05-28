@@ -10,6 +10,7 @@ data:
   GPP_USER: a
   GPP_ENDPOINT: a
   SELENIUM_SERVER: a
+  CHAT_ID: a
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
