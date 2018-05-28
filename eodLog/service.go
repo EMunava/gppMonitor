@@ -16,6 +16,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"github.com/weAutomateEverything/gppMonitor/hal"
 )
 
 type Service interface {
@@ -77,12 +78,12 @@ func (s *service) RetrieveEDOLogMethod() (r error) {
 	dateStamp, timeStamp := dateTimeConvert(date, time)
 
 	if dateStamp == "01/01/0001" {
-		s.alertService.SendHeartbeatGroupAlert(context.TODO(), emoji.Sprintf(":rotating_light: EDO.log timestamp format has changed. Unable to parse date/time."))
+		s.alertService.SendAlert(context.TODO(), hal.Chatid(),emoji.Sprintf(":rotating_light: EDO.log timestamp format has changed. Unable to parse date/time."))
 		log.Println("EDO.log timestamp format has changed. Unable to parse date/time.")
 	}
 	fileName := fileNameExtract(lastLine)
 
-	s.alertService.SendAlert(context.TODO(), s.response(lastLine, fileName, dateStamp, timeStamp))
+	s.alertService.SendAlert(context.TODO(),hal.Chatid(), s.response(lastLine, fileName, dateStamp, timeStamp))
 
 	os.Remove("/tmp/EDO.log")
 
@@ -149,7 +150,7 @@ func (s *service) response(message, filename, dateStamp, timeStamp string) strin
 		transactionsToBeProcessed := s.transactionService.RetrieveNightFileTransactions(filename)
 		return emoji.Sprintf(":white_check_mark: EDO Posting request file '%s' successfully sent on the: %s at %s\n----------\nTransactions: ", filename, dateStamp, timeStamp, transactionsToBeProcessed)
 	} else if strings.Contains(message, "failed") && cd == dateStamp {
-		s.calloutService.InvokeCallout(context.TODO(), "EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp))
+		s.calloutService.InvokeCallout(context.TODO(), hal.Chatid(),"EDO Posting request file send failed", fmt.Sprintf("EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp),hal.AlexaVars())
 		return emoji.Sprintf(":rotating_light: EDO Posting request file '%s' send failed on the: %s at %s", filename, dateStamp, timeStamp)
 	} else if cd != dateStamp {
 		panic("Retrying EDO.log retrieval")

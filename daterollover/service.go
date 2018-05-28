@@ -15,6 +15,7 @@ import (
 	"log"
 	"strings"
 	"time"
+	"github.com/weAutomateEverything/gppMonitor/hal"
 )
 
 type Service interface {
@@ -86,7 +87,7 @@ func (s *service) ConfirmDateRollOverMethod() (r error) {
 		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":white_check_mark: Global date has successfully roled over to: %s", td)))
 	case 0:
 		s.selenium.HandleSeleniumError(false, errors.New(emoji.Sprintf(":rotating_light: Global and ZA dates have failed to roll over to : %s", cd)))
-		s.calloutService.InvokeCallout(context.TODO(), "GPP Global and ZA date rollover failure", fmt.Sprintf("Global and ZA dates have failed to roll over to : %s", cd))
+		s.calloutService.InvokeCallout(context.TODO(),hal.Chatid(), "GPP Global and ZA date rollover failure", fmt.Sprintf("Global and ZA dates have failed to roll over to : %s", cd),hal.AlexaVars())
 	}
 	s.selenium.LogOut()
 

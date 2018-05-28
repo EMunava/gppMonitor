@@ -95,7 +95,8 @@ func (s *service) navigateToPostingExce() {
 
 	s.selenium.ClickByClassName("dh-navigation-tabs-current-tab-button")
 
-	s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
+	//s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
+	s.selenium.ClickByCSSSelector("#main-content > div.dh-main-container.ng-scope > div > div > div.dh-main-left-container-wrapper > div:nth-child(2) > div.dh-navigation-tabs > div.dialer-container > ul > li:nth-child(1) > button")
 
 	s.selenium.WaitFor(selenium.ByXPATH, "//*[contains(text(), 'Individual Messages (')]")
 
